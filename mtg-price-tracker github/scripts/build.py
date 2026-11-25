@@ -125,9 +125,14 @@ def read_bulk(path):
 
 
 def latest_bulk():
-    meta = json.loads(http("https://api.scryfall.com/bulk-data/default-cards"))
-    print("Scarico", meta["download_uri"])
-    return http(meta["download_uri"], dest="default-cards.json")
+    resp = json.loads(http("https://api.scryfall.com/bulk-data"))
+    items = resp.get("data", []) if isinstance(resp, dict) else resp
+    item = next((i for i in items if isinstance(i, dict) and i.get("type") == "default_cards"), None)
+    if not item or not item.get("download_uri"):
+        print("Risposta di Scryfall inattesa:", json.dumps(resp)[:1500])
+        sys.exit("Non trovo il file default_cards nell'elenco di Scryfall.")
+    print("Scarico", item["download_uri"], "aggiornato", item.get("updated_at"), "dimensione", item.get("size"))
+    return http(item["download_uri"], dest="default-cards.json")
 
 
 def main():
