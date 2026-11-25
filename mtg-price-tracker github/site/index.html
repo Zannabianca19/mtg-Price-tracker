@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cardmarket Price Tracker for Magic: The Gathering – foil, full art, Duel Commander</title>
+<meta name="description" content="Free Cardmarket price tracker for MTG: follow trend prices of any card, foil and full art versions, whole sets and Commander or Duel Commander decks. Daily changes, alerts, 5 languages.">
+<meta name="keywords" content="Cardmarket, MTG price tracker, Magic the Gathering prices, Cardmarket trend price, foil, full art, Duel Commander, Commander, MKM">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cardmarket Price Tracker for MTG">
+<meta property="og:description" content="Free Cardmarket price tracker for MTG: follow trend prices of any card, foil and full art versions, whole sets and Commander or Duel Commander decks. Daily changes, alerts, 5 languages.">
+<meta property="og:image" content="og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231c1626'/%3E%3Cpath d='M12 44 26 30l10 7 16-18' stroke='%23c99a2e' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Cardmarket Price Tracker for MTG", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any (web browser)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "description": "Free Cardmarket price tracker for MTG: follow trend prices of any card, foil and full art versions, whole sets and Commander or Duel Commander decks. Daily changes, alerts, 5 languages.", "inLanguage": ["en", "it", "fr", "es", "de"]}</script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: un registro da mercante, asciutto e preciso: conta solo quanto si è mosso il prezzo.
+   IDEA: la lavagna dei prezzi di un negozio di carte, con il listino che si aggiorna ogni mattina.
+   PICTURE: la tabella stessa, con frecce di variazione e una piccola curva per ogni carta.
+   COLOUR and TYPE: banda nero-viola come il retro delle carte, bianco carta, verde per i rialzi, rosso per i ribassi, oro come accento; Cinzel per il titolo, Inter con cifre tabellari.
+   LAYOUT: banda in alto con valore totale e i più mossi, sotto il listino a tutta larghezza, aggiunta e importazione in pannelli richiudibili.
+*/
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121016);--ink:light-dark(#16131c,#ece8f2);--mute:light-dark(#5d5868,#a49eb0);--line:light-dark(#e6e2ec,#2b2733);--band:#1c1626;--bandInk:#f4efe6;--gold:#c99a2e;--up:light-dark(#0a7a4b,#3fcf8e);--down:light-dark(#c1121f,#ff6b6b);--soft:light-dark(#f6f4f8,#1a1720)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
+.band{padding:clamp(24px,4vw,48px) max(5vw,16px)}
+.top{background:var(--band);color:var(--bandInk)}
+.wrap{max-width:1240px;margin:0 auto}
+h1{font:700 clamp(30px,4.4vw,46px)/1.05 Cinzel,Georgia,serif;margin:0 0 6px;text-wrap:balance}
+.sub{color:#cfc6db;margin:0;max-width:62ch}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px;margin-top:24px}
+.stat{border-top:2px solid var(--gold);padding-top:10px}
+.stat b{display:block;font-size:clamp(24px,3vw,32px);font-weight:600;white-space:nowrap}
+.stat span{color:#cfc6db;font-size:14px}
+.movers{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{background:#2a2236;border-radius:999px;padding:6px 12px;font-size:14px;white-space:nowrap}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:22px}
+button,.btn{font:600 15px Inter,sans-serif;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer}
+.top button{background:#2a2236;color:var(--bandInk);border-color:#3b3148}
+button.main{background:var(--gold);color:#1c1626;border-color:var(--gold)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.msg{font-size:14px;color:#cfc6db}
+input,select,textarea{font:16px Inter,sans-serif;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+textarea{min-height:150px;resize:vertical}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;margin-bottom:20px}
+details{border:1px solid var(--line);border-radius:12px;padding:0 16px;background:var(--soft)}
+summary{min-height:48px;display:flex;align-items:center;font-weight:600;cursor:pointer}
+.pane{display:grid;gap:10px;padding-bottom:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>input{flex:1 1 200px}
+label.chk{display:flex;gap:8px;align-items:center;min-height:44px}label.chk input{width:22px;min-height:22px}
+.head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.head h2{font:600 22px/1.2 Cinzel,serif;margin:0}
+.ctrl{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) minmax(0,.6fr) minmax(0,.6fr) minmax(0,1.2fr);gap:10px;margin-bottom:14px}
+.ctrl.eq{grid-template-columns:repeat(5,minmax(0,1fr))}@media(max-width:900px){.ctrl.eq{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ctrl label{display:grid;gap:4px;font-size:13px;color:var(--mute);font-weight:600}
+@media(max-width:900px){.ctrl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.more{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+
+table{width:100%;border-collapse:collapse}
+th{font-size:13px;color:var(--mute);font-weight:600;text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap}
+th:first-child{text-align:left}th[data-k]{cursor:pointer}th[data-k]:hover{color:var(--ink)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+td.name{text-align:left;white-space:normal}
+td.name a{color:var(--ink);font-weight:600;text-decoration:none}td.name a:hover{text-decoration:underline}
+td.name small{display:block;color:var(--mute);font-size:13px}
+.up{color:var(--up);font-weight:600}.down{color:var(--down);font-weight:600}.flat{color:var(--mute)}
+svg.sp{width:96px;height:26px;display:inline-block;vertical-align:middle}
+td input.q{width:64px;min-height:36px;padding:4px 8px;text-align:right}
+button.x{min-height:36px;padding:0 10px;font-size:14px}
+.empty{padding:40px 16px;text-align:center;color:var(--mute);border:1px dashed var(--line);border-radius:12px}
+.note{font-size:13px;color:var(--mute);margin-top:14px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--band);color:var(--bandInk);padding:10px 16px;border-radius:12px;display:none;gap:12px;align-items:center;box-shadow:0 8px 24px #0005;max-width:calc(100vw - 32px)}
+.toast.on{display:flex}.toast button{min-height:36px}
+.sample{display:inline-block;background:var(--gold);color:#1c1626;font-size:13px;font-weight:600;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+@media(prefers-reduced-motion:no-preference){tbody tr{animation:in .35s ease both}@keyframes in{from{opacity:0;transform:translateY(4px)}}}
+.scroll{overflow-x:auto}
+.how{margin-top:40px;border-top:1px solid var(--line);padding-top:24px;max-width:760px}.how h2{font:600 22px/1.2 Cinzel,serif;margin:18px 0 10px}.how li{margin:6px 0}.how details{background:none;border:0;padding:0}.how summary{min-height:40px}
+#pv{position:fixed;z-index:20;pointer-events:none;width:250px;aspect-ratio:488/680;border-radius:12px;background:var(--soft) center/cover no-repeat;box-shadow:0 12px 32px #0006;display:none}
+#pv.on{display:block}#pv.load::after{content:attr(data-load);position:absolute;inset:auto 0 45% 0;text-align:center;font-size:14px;color:var(--mute)}
+tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px 14px}
+.days{display:grid;gap:4px;max-width:640px}
+.day{display:grid;grid-template-columns:5.5em minmax(0,1fr) 6.5em 5.5em;gap:10px;align-items:center;font-size:14px}
+.day i{display:block;height:10px;border-radius:5px;background:var(--gold);opacity:.8}
+.day span{text-align:right;white-space:nowrap}
+button.dd{min-height:36px;padding:0 10px;font-size:14px}
+@media(max-width:600px){.stack tr.det td{padding-inline-start:0}.stack tr.det td::before{display:none}.day{grid-template-columns:4.5em minmax(0,1fr) 5.5em 4.5em;gap:6px}table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute)}.stack td:empty{display:none}.stack td.name{padding-inline-start:0}.stack td.name::before{display:none}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<header class="band top"><div class="wrap">
+  <h1>Cardmarket Price Tracker <span id="demo" class="sample" hidden>Sample data</span></h1>
+  <p class="sub" id="intro">The cards you follow, with the Cardmarket trend price updated once a day and how much it has moved.</p>
+  <div class="stats">
+    <div class="stat"><b id="sTot">—</b><span id="lTot">Value of what you see</span></div>
+    <div class="stat"><b id="sDelta">—</b><span>Since the previous update</span></div>
+    <div class="stat"><b id="sUpDown">—</b><span>Cards up / down</span></div>
+    <div class="stat"><b id="sDate">—</b><span>Last update</span></div>
+  </div>
+  <div class="movers" id="movers"></div>
+  <div class="bar" id="bar">
+    <label class="msg" style="display:inline-flex;gap:8px;align-items:center">Language <select id="selLang" style="width:auto;min-height:40px"></select></label>
+    <button class="main" id="bUpd">Update prices</button>
+    <button id="bCopy">Copy as table</button>
+    <button id="bExport">Save a backup</button>
+    <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">Load a backup<input type="file" id="fImport" accept=".json,application/json" hidden></label>
+    <span class="msg" id="msg" role="status"></span>
+  </div>
+</div></header>
+
+<main class="band"><div class="wrap">
+  <section id="mk" hidden style="margin-bottom:28px">
+    <div class="head"><h2>Market movers</h2><span class="msg" id="mkDate" style="color:var(--mute)"></span></div>
+    <p class="note" style="margin:0 0 12px">The cards rising and falling the most on Cardmarket, among those worth at least €1.</p>
+    <div class="ctrl eq">
+      <label>Period<select id="mkW"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option></select></label>
+      <label>Direction<select id="mkD"><option value="up">Rising</option><option value="down">Falling</option></select></label>
+      <label>Version<select id="mkF"><option value="n">Normal</option><option value="f">Foil</option></select></label>
+      <label>Legal in<select id="mkL"></select></label>
+      <label>Price from €<input id="mkMin" type="number" min="0" step="1" inputmode="decimal"></label>
+    </div>
+    <div id="mkList"></div>
+  </section>
+  <div class="tools" id="tools">
+    <details open id="dAdd"><summary>Add a card</summary><div class="pane">
+      <div class="row"><input id="qName" list="sugg" placeholder="Card name in English, e.g. Sol Ring" autocomplete="off"><datalist id="sugg"></datalist><button id="bFind">Find printings</button></div>
+      <select id="selPrint" hidden></select>
+      <div class="row" id="addRow" hidden><label class="chk"><input type="checkbox" id="cFoil"> Foil</label><label class="chk">Copies <input type="number" id="nQty" value="1" min="1" style="width:80px"></label><label class="chk">Alert me below € <input type="number" id="nTgt" min="0" step="0.01" placeholder="optional" style="width:120px"></label><button class="main" id="bAdd">Add to list</button></div>
+    </div></details>
+    <details id="dImp"><summary>Import a list (deck or collection)</summary><div class="pane">
+      <textarea id="tList" placeholder="1 Sol Ring&#10;1 Rhystic Study&#10;Cyclonic Rift"></textarea>
+      <label class="chk" style="display:grid;gap:4px">Which printing to follow<select id="iMode">
+        <option value="def">Scryfall's default printing (fast)</option>
+        <option value="max">The most expensive version, normal or foil</option>
+        <option value="spec">The most expensive among full art, borderless, showcase and extended art</option>
+        <option value="specfoil">The most expensive among full art, borderless, showcase and extended art, foil only</option>
+      </select></label>
+      <input id="iGroup" placeholder="Group name, e.g. Alela (optional)">
+      <span class="note">Several decks at once: put a line starting with # before each deck (e.g. # Satya). Each deck becomes a group, and the name written above becomes the set that holds them all.</span>
+      <div class="row"><button class="main" id="bImp">Import</button><span class="note">One card per line, with or without quantity. Options other than the default check every printing of each card: a 100-card deck takes a couple of minutes. If a card has no special versions, its most expensive version is used.</span></div>
+    </div></details>
+    <details id="dGrp"><summary>Follow a whole set</summary><div class="pane">
+      <div class="row"><input id="gSet" placeholder="Set code, e.g. DSK" autocomplete="off" style="max-width:200px"><button class="main" id="bGrp">Add the group</button></div>
+      <div class="row"><label class="chk"><input type="checkbox" id="gFull" checked> Full art</label><label class="chk"><input type="checkbox" id="gBord"> Borderless</label><label class="chk"><input type="checkbox" id="gShow"> Showcase</label><label class="chk"><input type="checkbox" id="gFoil" checked> Foil version</label></div>
+      <span class="note">The code is the abbreviation in brackets next to the set name when you search for a card. The group's cards go into the list under the group name: pick it in the menu above the list and sort by 7 or 30 days.</span>
+      <hr style="border:0;border-top:1px solid var(--line);width:100%">
+      <strong>Or: every card above a price</strong>
+      <div class="row"><label class="chk">Cardmarket price from € <input type="number" id="pMin" value="100" min="5" step="5" style="width:100px"></label><label class="chk">Legal in <select id="pFmt" style="width:auto"><option value="">Any format</option><option value="commander" selected>Commander</option><option value="duel">Duel Commander</option><option value="oathbreaker">Oathbreaker</option><option value="paupercommander">Pauper Commander</option><option value="standard">Standard</option><option value="pioneer">Pioneer</option><option value="modern">Modern</option><option value="legacy">Legacy</option><option value="vintage">Vintage</option><option value="pauper">Pauper</option><option value="premodern">Premodern</option><option value="oldschool">Old School</option><option value="predh">PreDH</option></select></label><button class="main" id="bPrice">Add the group</button></div>
+      <span class="note">It uses the normal (non-foil) price, printing by printing. Press the button again to include cards that have since risen above the threshold; those that fell below stay in the group, so you see the drops.</span>
+      <hr style="border:0;border-top:1px solid var(--line);width:100%">
+      <strong>Or: the most expensive cards, one version per card</strong>
+      <div class="row"><label class="chk">How many <input type="number" id="tN" value="100" min="10" max="300" step="10" style="width:90px"></label><button class="main" id="bTop">Build the ranking</button></div>
+      <span class="note">For each card it keeps only the most expensive version, normal or foil (for example a Secret Lair foil), in the format chosen above. It takes a few minutes: it checks every printing of about twice as many cards as requested.</span>
+    </div></details>
+    <details id="dSets"><summary>Sets of groups (e.g. the whole meta)</summary><div class="pane">
+      <input id="setName" placeholder="Set name, e.g. Meta Duel" maxlength="60">
+      <div id="setPick" class="row"></div>
+      <div class="row"><button class="main" id="bSet">Save the set</button><span class="note">Tick the groups to combine. A card in several decks appears only once. To change a set, save it again with the same name.</span></div>
+      <div id="setList" class="row"></div>
+    </div></details>
+    <details id="dSet"><summary>Alerts</summary><div class="pane">
+      <label class="chk">Also alert me when a card moves by at least <input type="number" id="nThr" min="1" max="100" style="width:80px"> %</label>
+      <button id="bNotif">Turn on browser notifications</button>
+      <span class="note">Alerts arrive as notifications after each update if the browser allows it; otherwise you read them at the top. You set each card's target price in the list: you get an alert on the day the price drops below it.</span>
+    </div></details>
+  </div>
+
+  
+  <div class="head"><h2>Your list <span class="msg" id="count" style="font:500 15px Inter,sans-serif;color:var(--mute)"></span></h2></div>
+  <div class="ctrl">
+    <label>Group<span class="row" style="gap:6px"><select id="selGrp" style="flex:1 1 160px"></select><button class="x" id="bDelGrp" hidden>Remove</button></span></label>
+    <label>Sort by<select id="selSort">
+      <option value="m1|-1">Biggest movers · 1 day</option>
+      <option value="d1|-1">Biggest rise · 1 day</option><option value="d1|1">Biggest drop · 1 day</option>
+      <option value="d7|-1">Biggest rise · 7 days</option><option value="d7|1">Biggest drop · 7 days</option>
+      <option value="d30|-1">Biggest rise · 30 days</option><option value="d30|1">Biggest drop · 30 days</option>
+      <option value="e7|1">Biggest drop in euros · 7 days</option><option value="e7|-1">Biggest rise in euros · 7 days</option>
+      <option value="e30|1">Biggest drop in euros · 30 days</option>
+      <option value="price|-1">Highest price</option><option value="price|1">Lowest price</option>
+      <option value="name|1">Name A to Z</option>
+    </select></label>
+    <label>Price from €<input id="pLo" type="number" min="0" step="1" inputmode="decimal"></label>
+    <label>to €<input id="pHi" type="number" min="0" step="1" inputmode="decimal"></label>
+    <label>Search<input id="qFilter" type="search" placeholder="Name or set"></label>
+  </div>
+  <div id="list"></div>
+  <p class="note">Source: Cardmarket trend price for the chosen printing, via Scryfall, updated once a day. History starts on the day you add the card and is stored in this browser: clearing browsing data deletes it, so press «Save a backup» now and then. To move to another computer or browser, use «Load a backup».</p>
+  <section class="how" id="how-it-works">
+    <h2>How it works</h2>
+    <p>A free Cardmarket price tracker for Magic: The Gathering. It runs in your browser, with no account and nothing to install.</p>
+    <ul>
+      <li>Follow any card in any printing, normal or foil, and see how much its trend price rose or fell over 1, 7 and 30 days.</li>
+      <li>Import a whole deck (Commander, Duel Commander, Modern, Legacy) and find the most expensive version of every card, even full art, borderless or showcase foil only.</li>
+      <li>Follow a whole set, or every card above a price that is legal in your format, to spot the spikes and the deals.</li>
+      <li>Set a target price and get an alert when the card drops below it.</li>
+    </ul>
+    <h2>FAQ</h2>
+    <details><summary>Where do the prices come from?</summary><p>From the Cardmarket trend price of each printing, published by Scryfall and updated once a day. This app is not affiliated with Cardmarket or Scryfall.</p></details>
+    <details><summary>Where is my data stored?</summary><p>Only in your browser: nobody else sees it. Save a backup now and then so you don't lose the history.</p></details>
+    <details id="faqNew"><summary>Why don't I see any changes at first?</summary><p>Changes show up from the next day, because the history starts on the day you add a card.</p></details>
+  </section>
+</div></main>
+
+<div id="pv" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status"><span id="tMsg"></span><button id="tUndo">Undo</button></div>
+
+<script type="module">
+{
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ---------- lingue ---------- */
+const LANGS={en:'English',it:'Italiano',fr:'Français',es:'Español',de:'Deutsch'};
+const LOCS={en:'en-GB',it:'it-IT',fr:'fr-FR',es:'es-ES',de:'de-DE'};
+const IDX={it:0,en:1,fr:2,es:3,de:4};
+const RECS=[["Prezzi Cardmarket", "Cardmarket Price Tracker", "Prix Cardmarket", "Precios de Cardmarket", "Cardmarket-Preise"], ["Prezzi Cardmarket (browser)", "Cardmarket Prices", "Prix Cardmarket", "Precios de Cardmarket", "Cardmarket-Preise"], ["Dati d'esempio", "Sample data", "Données d'exemple", "Datos de ejemplo", "Beispieldaten"], ["Le carte che segui, con il prezzo di tendenza di Cardmarket aggiornato una volta al giorno e quanto si è mosso.", "The cards you follow, with the Cardmarket trend price updated once a day and how much it has moved.", "Les cartes que vous suivez, avec le prix tendance Cardmarket mis à jour une fois par jour et son évolution.", "Las cartas que sigues, con el precio de tendencia de Cardmarket actualizado una vez al día y cuánto se ha movido.", "Die Karten, denen du folgst, mit dem täglich aktualisierten Cardmarket-Trendpreis und seiner Veränderung."], ["Valore di quello che vedi", "Value of what you see", "Valeur de ce qui est affiché", "Valor de lo que ves", "Wert der Anzeige"], ["Valore totale della lista", "Total value of the list", "Valeur totale de la liste", "Valor total de la lista", "Gesamtwert der Liste"], ["Dall'aggiornamento precedente", "Since the previous update", "Depuis la mise à jour précédente", "Desde la actualización anterior", "Seit der letzten Aktualisierung"], ["Carte in rialzo / in ribasso", "Cards up / down", "Cartes en hausse / en baisse", "Cartas al alza / a la baja", "Karten gestiegen / gefallen"], ["Ultimo aggiornamento", "Last update", "Dernière mise à jour", "Última actualización", "Letzte Aktualisierung"], ["Aggiorna i prezzi", "Update prices", "Mettre à jour les prix", "Actualizar precios", "Preise aktualisieren"], ["Copia come tabella", "Copy as table", "Copier en tableau", "Copiar como tabla", "Als Tabelle kopieren"], ["Salva una copia dei dati", "Save a backup", "Enregistrer une copie", "Guardar una copia", "Sicherung speichern"], ["Carica una copia", "Load a backup", "Charger une copie", "Cargar una copia", "Sicherung laden"], ["Lingua", "Language", "Langue", "Idioma", "Sprache"], ["Aggiungi una carta", "Add a card", "Ajouter une carte", "Añadir una carta", "Karte hinzufügen"], ["Nome della carta in inglese, es. Sol Ring", "Card name in English, e.g. Sol Ring", "Nom de la carte en anglais, ex. Sol Ring", "Nombre de la carta en inglés, p. ej. Sol Ring", "Kartenname auf Englisch, z. B. Sol Ring"], ["Cerca le edizioni", "Find printings", "Chercher les éditions", "Buscar ediciones", "Drucke suchen"], ["Copie", "Copies", "Exemplaires", "Copias", "Anzahl"], ["Avvisami sotto €", "Alert me below €", "M'alerter sous €", "Avisarme por debajo de €", "Alarm unter €"], ["facoltativo", "optional", "facultatif", "opcional", "optional"], ["Aggiungi alla lista", "Add to list", "Ajouter à la liste", "Añadir a la lista", "Zur Liste hinzufügen"], ["Importa una lista (mazzo o collezione)", "Import a list (deck or collection)", "Importer une liste (deck ou collection)", "Importar una lista (mazo o colección)", "Liste importieren (Deck oder Sammlung)"], ["Quale versione seguire", "Which printing to follow", "Quelle version suivre", "Qué versión seguir", "Welche Version verfolgen"], ["L'edizione predefinita di Scryfall (veloce)", "Scryfall's default printing (fast)", "L'édition par défaut de Scryfall (rapide)", "La edición predeterminada de Scryfall (rápido)", "Scryfalls Standarddruck (schnell)"], ["La versione più cara, normale o foil", "The most expensive version, normal or foil", "La version la plus chère, normale ou foil", "La versión más cara, normal o foil", "Die teuerste Version, normal oder Foil"], ["La più cara tra full art, borderless, showcase ed extended art", "The most expensive among full art, borderless, showcase and extended art", "La plus chère parmi full art, borderless, showcase et extended art", "La más cara entre full art, borderless, showcase y extended art", "Die teuerste unter Full Art, Borderless, Showcase und Extended Art"], ["La più cara tra full art, borderless, showcase ed extended art, solo foil", "The most expensive among full art, borderless, showcase and extended art, foil only", "La plus chère parmi full art, borderless, showcase et extended art, foil uniquement", "La más cara entre full art, borderless, showcase y extended art, solo foil", "Die teuerste unter Full Art, Borderless, Showcase und Extended Art, nur Foil"], ["Nome del gruppo, es. Alela (facoltativo)", "Group name, e.g. Alela (optional)", "Nom du groupe, ex. Alela (facultatif)", "Nombre del grupo, p. ej. Alela (opcional)", "Gruppenname, z. B. Alela (optional)"], ["Più mazzi insieme: metti una riga che inizia con # prima di ogni mazzo (es. # Satya). Ogni mazzo diventa un gruppo, e il nome scritto qui sopra diventa l'insieme che li contiene tutti.", "Several decks at once: put a line starting with # before each deck (e.g. # Satya). Each deck becomes a group, and the name written above becomes the set that holds them all.", "Plusieurs decks d'un coup : mettez une ligne commençant par # avant chaque deck (ex. # Satya). Chaque deck devient un groupe, et le nom ci-dessus devient l'ensemble qui les contient tous.", "Varios mazos a la vez: pon una línea que empiece por # antes de cada mazo (p. ej. # Satya). Cada mazo se convierte en un grupo y el nombre de arriba en el conjunto que los contiene a todos.", "Mehrere Decks auf einmal: Setze vor jedes Deck eine Zeile mit # (z. B. # Satya). Jedes Deck wird eine Gruppe, und der Name oben wird die Sammlung, die alle enthält."], ["Importa", "Import", "Importer", "Importar", "Importieren"], ["Una carta per riga, con o senza quantità. Le opzioni diverse da quella predefinita controllano tutte le versioni di ogni carta: per un mazzo da 100 carte ci vogliono un paio di minuti. Se una carta non ha versioni speciali, prendo la sua versione più cara.", "One card per line, with or without quantity. Options other than the default check every printing of each card: a 100-card deck takes a couple of minutes. If a card has no special versions, its most expensive version is used.", "Une carte par ligne, avec ou sans quantité. Les options autres que celle par défaut vérifient toutes les éditions de chaque carte : comptez quelques minutes pour un deck de 100 cartes. Si une carte n'a pas de version spéciale, sa version la plus chère est prise.", "Una carta por línea, con o sin cantidad. Las opciones distintas de la predeterminada revisan todas las ediciones de cada carta: un mazo de 100 cartas tarda un par de minutos. Si una carta no tiene versiones especiales, se toma su versión más cara.", "Eine Karte pro Zeile, mit oder ohne Anzahl. Andere Optionen als die Standardoption prüfen jeden Druck jeder Karte: Ein Deck mit 100 Karten dauert ein paar Minuten. Hat eine Karte keine Sonderversion, wird ihre teuerste Version genommen."], ["Segui un'intera espansione", "Follow a whole set", "Suivre une extension entière", "Seguir una expansión entera", "Eine ganze Erweiterung verfolgen"], ["Codice dell'espansione, es. DSK", "Set code, e.g. DSK", "Code de l'extension, ex. DSK", "Código de la expansión, p. ej. DSK", "Set-Code, z. B. DSK"], ["Aggiungi il gruppo", "Add the group", "Ajouter le groupe", "Añadir el grupo", "Gruppe hinzufügen"], ["Versione foil", "Foil version", "Version foil", "Versión foil", "Foil-Version"], ["Il codice è la sigla tra parentesi accanto al nome dell'edizione, quando cerchi una carta. Le carte del gruppo finiscono nella lista con il nome del gruppo: sceglilo nel menu sopra la lista e ordina per 7 o 30 giorni.", "The code is the abbreviation in brackets next to the set name when you search for a card. The group's cards go into the list under the group name: pick it in the menu above the list and sort by 7 or 30 days.", "Le code est le sigle entre parenthèses à côté du nom de l'édition quand vous cherchez une carte. Les cartes du groupe arrivent dans la liste sous le nom du groupe : choisissez-le dans le menu au-dessus de la liste et triez sur 7 ou 30 jours.", "El código es la sigla entre paréntesis junto al nombre de la edición cuando buscas una carta. Las cartas del grupo van a la lista con el nombre del grupo: elígelo en el menú sobre la lista y ordena por 7 o 30 días.", "Der Code ist das Kürzel in Klammern neben dem Set-Namen, wenn du eine Karte suchst. Die Karten der Gruppe kommen unter dem Gruppennamen in die Liste: Wähle ihn im Menü über der Liste und sortiere nach 7 oder 30 Tagen."], ["Oppure: tutte le carte sopra un prezzo", "Or: every card above a price", "Ou : toutes les cartes au-dessus d'un prix", "O bien: todas las cartas por encima de un precio", "Oder: alle Karten über einem Preis"], ["Prezzo Cardmarket da €", "Cardmarket price from €", "Prix Cardmarket à partir de €", "Precio en Cardmarket desde €", "Cardmarket-Preis ab €"], ["Legali in", "Legal in", "Légales en", "Legales en", "Legal in"], ["Qualsiasi formato", "Any format", "Tout format", "Cualquier formato", "Jedes Format"], ["Prende il prezzo della versione normale, non foil, edizione per edizione. Premi di nuovo il pulsante quando vuoi includere le carte salite sopra la soglia nel frattempo; quelle scese sotto restano nel gruppo, così vedi i cali.", "It uses the normal (non-foil) price, printing by printing. Press the button again to include cards that have since risen above the threshold; those that fell below stay in the group, so you see the drops.", "Utilise le prix de la version normale, non foil, édition par édition. Appuyez à nouveau sur le bouton pour inclure les cartes passées au-dessus du seuil entre-temps ; celles passées en dessous restent dans le groupe, pour voir les baisses.", "Usa el precio de la versión normal, no foil, edición por edición. Pulsa de nuevo el botón para incluir las cartas que han subido por encima del umbral; las que bajan siguen en el grupo, así ves las caídas.", "Verwendet den Preis der normalen Version (nicht Foil), Druck für Druck. Drücke den Knopf erneut, um Karten aufzunehmen, die inzwischen über die Schwelle gestiegen sind; gefallene bleiben in der Gruppe, damit du die Rückgänge siehst."], ["Oppure: le carte più costose, una sola versione per carta", "Or: the most expensive cards, one version per card", "Ou : les cartes les plus chères, une seule version par carte", "O bien: las cartas más caras, una sola versión por carta", "Oder: die teuersten Karten, eine Version pro Karte"], ["Quante", "How many", "Combien", "Cuántas", "Wie viele"], ["Crea la classifica", "Build the ranking", "Créer le classement", "Crear la clasificación", "Rangliste erstellen"], ["Per ogni carta tiene solo la versione più cara, normale o foil (per esempio una Secret Lair foil), nel formato scelto qui sopra. Ci vuole qualche minuto: controlla tutte le edizioni di circa il doppio delle carte richieste.", "For each card it keeps only the most expensive version, normal or foil (for example a Secret Lair foil), in the format chosen above. It takes a few minutes: it checks every printing of about twice as many cards as requested.", "Pour chaque carte, garde seulement la version la plus chère, normale ou foil (par exemple une Secret Lair foil), dans le format choisi ci-dessus. Cela prend quelques minutes : toutes les éditions d'environ deux fois plus de cartes sont vérifiées.", "Para cada carta conserva solo la versión más cara, normal o foil (por ejemplo una Secret Lair foil), en el formato elegido arriba. Tarda unos minutos: revisa todas las ediciones de aproximadamente el doble de cartas pedidas.", "Behält für jede Karte nur die teuerste Version, normal oder Foil (z. B. eine Secret Lair Foil), im oben gewählten Format. Dauert ein paar Minuten: Es prüft alle Drucke von etwa doppelt so vielen Karten wie gewünscht."], ["Insiemi di gruppi (es. tutto il meta)", "Sets of groups (e.g. the whole meta)", "Ensembles de groupes (ex. tout le méta)", "Conjuntos de grupos (p. ej. todo el meta)", "Gruppensammlungen (z. B. das ganze Meta)"], ["Nome dell'insieme, es. Meta Duel", "Set name, e.g. Meta Duel", "Nom de l'ensemble, ex. Meta Duel", "Nombre del conjunto, p. ej. Meta Duel", "Name der Sammlung, z. B. Meta Duel"], ["Salva l'insieme", "Save the set", "Enregistrer l'ensemble", "Guardar el conjunto", "Sammlung speichern"], ["Spunta i gruppi da mettere insieme. Una carta presente in più mazzi compare una volta sola. Per modificare un insieme, salvalo di nuovo con lo stesso nome.", "Tick the groups to combine. A card in several decks appears only once. To change a set, save it again with the same name.", "Cochez les groupes à réunir. Une carte présente dans plusieurs decks n'apparaît qu'une fois. Pour modifier un ensemble, enregistrez-le à nouveau sous le même nom.", "Marca los grupos que quieres juntar. Una carta presente en varios mazos aparece una sola vez. Para cambiar un conjunto, guárdalo otra vez con el mismo nombre.", "Hake die Gruppen an, die zusammengehören. Eine Karte in mehreren Decks erscheint nur einmal. Um eine Sammlung zu ändern, speichere sie erneut unter demselben Namen."], ["Avvisi", "Alerts", "Alertes", "Avisos", "Benachrichtigungen"], ["Avvisami anche quando una carta si muove di almeno", "Also alert me when a card moves by at least", "M'alerter aussi quand une carte bouge d'au moins", "Avisarme también cuando una carta se mueva al menos un", "Benachrichtige mich auch, wenn sich eine Karte um mindestens"], ["Attiva le notifiche del browser", "Turn on browser notifications", "Activer les notifications du navigateur", "Activar las notificaciones del navegador", "Browser-Benachrichtigungen einschalten"], ["L'avviso arriva come notifica dopo ogni aggiornamento, se il browser lo permette; altrimenti lo leggi in alto. Il prezzo obiettivo di ogni carta lo imposti nella lista: ricevi un avviso il giorno in cui il prezzo scende sotto quella cifra.", "Alerts arrive as notifications after each update if the browser allows it; otherwise you read them at the top. You set each card's target price in the list: you get an alert on the day the price drops below it.", "L'alerte arrive comme notification après chaque mise à jour si le navigateur le permet ; sinon, elle s'affiche en haut. Le prix cible de chaque carte se règle dans la liste : vous êtes alerté le jour où le prix passe en dessous.", "El aviso llega como notificación tras cada actualización si el navegador lo permite; si no, lo lees arriba. El precio objetivo de cada carta se fija en la lista: recibes un aviso el día en que el precio baja de esa cifra.", "Die Meldung kommt nach jeder Aktualisierung als Benachrichtigung, wenn der Browser es erlaubt; sonst steht sie oben. Den Zielpreis jeder Karte legst du in der Liste fest: Du wirst benachrichtigt, sobald der Preis darunter fällt."], ["La tua lista", "Your list", "Votre liste", "Tu lista", "Deine Liste"], ["Gruppo", "Group", "Groupe", "Grupo", "Gruppe"], ["Togli", "Remove", "Retirer", "Quitar", "Entfernen"], ["Ordina per", "Sort by", "Trier par", "Ordenar por", "Sortieren nach"], ["Più mosse · 1 giorno", "Biggest movers · 1 day", "Plus forts mouvements · 1 jour", "Más movidas · 1 día", "Stärkste Bewegung · 1 Tag"], ["Rialzo maggiore · 1 giorno", "Biggest rise · 1 day", "Plus forte hausse · 1 jour", "Mayor subida · 1 día", "Größter Anstieg · 1 Tag"], ["Ribasso maggiore · 1 giorno", "Biggest drop · 1 day", "Plus forte baisse · 1 jour", "Mayor bajada · 1 día", "Größter Rückgang · 1 Tag"], ["Rialzo maggiore · 7 giorni", "Biggest rise · 7 days", "Plus forte hausse · 7 jours", "Mayor subida · 7 días", "Größter Anstieg · 7 Tage"], ["Ribasso maggiore · 7 giorni", "Biggest drop · 7 days", "Plus forte baisse · 7 jours", "Mayor bajada · 7 días", "Größter Rückgang · 7 Tage"], ["Rialzo maggiore · 30 giorni", "Biggest rise · 30 days", "Plus forte hausse · 30 jours", "Mayor subida · 30 días", "Größter Anstieg · 30 Tage"], ["Ribasso maggiore · 30 giorni", "Biggest drop · 30 days", "Plus forte baisse · 30 jours", "Mayor bajada · 30 días", "Größter Rückgang · 30 Tage"], ["Calo maggiore in euro · 7 giorni", "Biggest drop in euros · 7 days", "Plus forte baisse en euros · 7 jours", "Mayor bajada en euros · 7 días", "Größter Rückgang in Euro · 7 Tage"], ["Aumento maggiore in euro · 7 giorni", "Biggest rise in euros · 7 days", "Plus forte hausse en euros · 7 jours", "Mayor subida en euros · 7 días", "Größter Anstieg in Euro · 7 Tage"], ["Calo maggiore in euro · 30 giorni", "Biggest drop in euros · 30 days", "Plus forte baisse en euros · 30 jours", "Mayor bajada en euros · 30 días", "Größter Rückgang in Euro · 30 Tage"], ["Prezzo più alto", "Highest price", "Prix le plus élevé", "Precio más alto", "Höchster Preis"], ["Prezzo più basso", "Lowest price", "Prix le plus bas", "Precio más bajo", "Niedrigster Preis"], ["Nome dalla A alla Z", "Name A to Z", "Nom de A à Z", "Nombre de la A a la Z", "Name A bis Z"], ["Prezzo da €", "Price from €", "Prix de €", "Precio desde €", "Preis von €"], ["a €", "to €", "à €", "hasta €", "bis €"], ["Cerca", "Search", "Chercher", "Buscar", "Suchen"], ["Nome o edizione", "Name or set", "Nom ou édition", "Nombre o edición", "Name oder Set"], ["Fonte: prezzo di tendenza di Cardmarket per l'edizione scelta, tramite Scryfall, aggiornato una volta al giorno. Lo storico parte dal giorno in cui aggiungi la carta e resta salvato in questo browser: se cancelli i dati di navigazione si perde, quindi ogni tanto premi «Salva una copia dei dati». Per spostarti su un altro computer o browser, usa «Carica una copia».", "Source: Cardmarket trend price for the chosen printing, via Scryfall, updated once a day. History starts on the day you add the card and is stored in this browser: clearing browsing data deletes it, so press «Save a backup» now and then. To move to another computer or browser, use «Load a backup».", "Source : prix tendance Cardmarket de l'édition choisie, via Scryfall, mis à jour une fois par jour. L'historique commence le jour où vous ajoutez la carte et reste dans ce navigateur : effacer les données de navigation le supprime, alors appuyez de temps en temps sur «Enregistrer une copie». Pour passer à un autre ordinateur ou navigateur, utilisez «Charger une copie».", "Fuente: precio de tendencia de Cardmarket para la edición elegida, a través de Scryfall, actualizado una vez al día. El historial empieza el día en que añades la carta y se guarda en este navegador: si borras los datos de navegación se pierde, así que pulsa de vez en cuando «Guardar una copia». Para pasar a otro ordenador o navegador, usa «Cargar una copia».", "Quelle: Cardmarket-Trendpreis des gewählten Drucks über Scryfall, einmal täglich aktualisiert. Der Verlauf beginnt am Tag, an dem du die Karte hinzufügst, und wird in diesem Browser gespeichert: Wenn du die Browserdaten löschst, ist er weg. Drücke also ab und zu «Sicherung speichern». Für einen anderen Computer oder Browser nutze «Sicherung laden»."], ["Annulla", "Undo", "Annuler", "Deshacer", "Rückgängig"], ["Carico…", "Loading…", "Chargement…", "Cargando…", "Lädt…"], ["Non riesco a leggere i dati: ", "Can't read the data: ", "Impossible de lire les données : ", "No puedo leer los datos: ", "Daten können nicht gelesen werden: "], ["Non riesco a salvare nel browser: ", "Can't save in the browser: ", "Impossible d'enregistrer dans le navigateur : ", "No puedo guardar en el navegador: ", "Speichern im Browser nicht möglich: "], [". Salva una copia dei dati.", ". Save a backup.", ". Enregistrez une copie.", ". Guarda una copia.", ". Speichere eine Sicherung."], ["Scryfall non raggiungibile da questo browser (", "Scryfall can't be reached from this browser (", "Scryfall injoignable depuis ce navigateur (", "No se puede acceder a Scryfall desde este navegador (", "Scryfall ist von diesem Browser aus nicht erreichbar ("], ["Errore di Scryfall", "Scryfall error", "Erreur Scryfall", "Error de Scryfall", "Scryfall-Fehler"], ["Scryfall ha risposto ", "Scryfall replied ", "Scryfall a répondu ", "Scryfall respondió ", "Scryfall antwortete "], ["Aggiorno ", "Updating ", "Mise à jour de ", "Actualizando ", "Aktualisiere "], [" carte…", " cards…", " cartes…", " cartas…", " Karten…"], [" prezzi aggiornati.", " prices updated.", " prix mis à jour.", " precios actualizados.", " Preise aktualisiert."], ["Aggiornamento non riuscito: ", "Update failed: ", "Échec de la mise à jour : ", "La actualización falló: ", "Aktualisierung fehlgeschlagen: "], ["Sotto il tuo prezzo: ", "Below your price: ", "Sous votre prix : ", "Por debajo de tu precio: ", "Unter deinem Preis: "], ["Movimenti forti: ", "Big moves: ", "Forts mouvements : ", "Movimientos fuertes: ", "Starke Bewegungen: "], [" e altre ", " and ", " et ", " y ", " und "], ["Cerco le edizioni di ", "Looking up printings of ", "Recherche des éditions de ", "Buscando ediciones de ", "Suche Drucke von "], [" edizioni di ", " printings of ", " éditions de ", " ediciones de ", " Drucke von "], ["Non trovata: ", "Not found: ", "Introuvable : ", "No encontrada: ", "Nicht gefunden: "], ["Questa edizione è già nella lista.", "This printing is already in the list.", "Cette édition est déjà dans la liste.", "Esta edición ya está en la lista.", "Dieser Druck ist schon in der Liste."], [" aggiunta.", " added.", " ajoutée.", " añadida.", " hinzugefügt."], ["Non ho trovato nomi di carte nel testo.", "No card names found in the text.", "Aucun nom de carte trouvé dans le texte.", "No he encontrado nombres de cartas en el texto.", "Keine Kartennamen im Text gefunden."], ["Importo ", "Importing ", "Import de ", "Importando ", "Importiere "], ["Controllo tutte le versioni: ", "Checking all versions: ", "Vérification de toutes les versions : ", "Revisando todas las versiones: ", "Prüfe alle Versionen: "], [" di ", " of ", " sur ", " de ", " von "], [" mazzi, ", " decks, ", " decks, ", " mazos, ", " Decks, "], [" carte importate", " cards imported", " cartes importées", " cartas importadas", " Karten importiert"], [" senza versioni speciali: presa la più cara)", " without special versions: most expensive taken)", " sans version spéciale : la plus chère est prise)", " sin versiones especiales: se tomó la más cara)", " ohne Sonderversion: teuerste genommen)"], ["; non trovate: ", "; not found: ", " ; introuvables : ", "; no encontradas: ", "; nicht gefunden: "], ["Importazione non riuscita: ", "Import failed: ", "Échec de l'import : ", "La importación falló: ", "Import fehlgeschlagen: "], ["Scrivi il codice dell'espansione, da 2 a 6 tra lettere e numeri.", "Enter the set code, 2 to 6 letters or digits.", "Saisissez le code de l'extension, 2 à 6 lettres ou chiffres.", "Escribe el código de la expansión, de 2 a 6 letras o números.", "Gib den Set-Code ein, 2 bis 6 Buchstaben oder Ziffern."], ["Scegli almeno un tipo: full art, borderless o showcase.", "Choose at least one type: full art, borderless or showcase.", "Choisissez au moins un type : full art, borderless ou showcase.", "Elige al menos un tipo: full art, borderless o showcase.", "Wähle mindestens einen Typ: Full Art, Borderless oder Showcase."], ["Sopra {n} €", "Above €{n}", "Plus de {n} €", "Más de {n} €", "Über {n} €"], ["Le {n} più care", "Top {n} most expensive", "Les {n} plus chères", "Las {n} más caras", "Die {n} teuersten"], ["Cerco le carte più costose…", "Looking for the most expensive cards…", "Recherche des cartes les plus chères…", "Buscando las cartas más caras…", "Suche die teuersten Karten…"], ["Classifica pronta: ", "Ranking ready: ", "Classement prêt : ", "Clasificación lista: ", "Rangliste fertig: "], [" carte, ", " cards, ", " cartes, ", " cartas, ", " Karten, "], [" nuove nella lista.", " new in the list.", " nouvelles dans la liste.", " nuevas en la lista.", " neu in der Liste."], ["Classifica non riuscita: ", "Ranking failed: ", "Échec du classement : ", "La clasificación falló: ", "Rangliste fehlgeschlagen: "], ["Cerco le carte di ", "Looking up cards for ", "Recherche des cartes de ", "Buscando las cartas de ", "Suche Karten für "], [" carte aggiunte al gruppo ", " cards added to the group ", " cartes ajoutées au groupe ", " cartas añadidas al grupo ", " Karten zur Gruppe hinzugefügt: "], [" erano già nella lista)", " were already in the list)", " étaient déjà dans la liste)", " ya estaban en la lista)", " waren schon in der Liste)"], ["Gruppo non trovato: ", "Group not found: ", "Groupe introuvable : ", "Grupo no encontrado: ", "Gruppe nicht gefunden: "], ["Tutte le carte", "All cards", "Toutes les cartes", "Todas las cartas", "Alle Karten"], ["Carte singole", "Single cards", "Cartes individuelles", "Cartas sueltas", "Einzelkarten"], ["Insiemi", "Sets", "Ensembles", "Conjuntos", "Sammlungen"], [" gruppi)", " groups)", " groupes)", " grupos)", " Gruppen)"], ["Gruppi", "Groups", "Groupes", "Grupos", "Gruppen"], ["Prima crea qualche gruppo, per esempio importando i mazzi con un nome di gruppo.", "First create some groups, for example by importing decks with a group name.", "Créez d'abord quelques groupes, par exemple en important des decks avec un nom de groupe.", "Primero crea algunos grupos, por ejemplo importando mazos con un nombre de grupo.", "Erstelle zuerst ein paar Gruppen, z. B. indem du Decks mit Gruppennamen importierst."], ["Insieme ", "Set ", "Ensemble ", "Conjunto ", "Sammlung "], [" tolto: i gruppi restano.", " removed: the groups stay.", " retiré : les groupes restent.", " quitado: los grupos se quedan.", " entfernt: Die Gruppen bleiben."], ["Gruppo ", "Group ", "Groupe ", "Grupo ", "Gruppe "], [" tolto: ", " removed: ", " retiré : ", " quitado: ", " entfernt: "], ["1 carta eliminata", "1 card deleted", "1 carte supprimée", "1 carta eliminada", "1 Karte gelöscht"], [" carte eliminate", " cards deleted", " cartes supprimées", " cartas eliminadas", " Karten gelöscht"], ["1 resta", "1 stays", "1 reste", "1 se queda", "1 bleibt"], [" restano", " stay", " restent", " se quedan", " bleiben"], [" perché sono in altri gruppi o le avevi aggiunte tu", " because they are in other groups or you added them yourself", " car elles sont dans d'autres groupes ou ajoutées par vous", " porque están en otros grupos o las añadiste tú", " weil sie in anderen Gruppen sind oder du sie selbst hinzugefügt hast"], ["Dai un nome all'insieme.", "Give the set a name.", "Donnez un nom à l'ensemble.", "Ponle un nombre al conjunto.", "Gib der Sammlung einen Namen."], ["Spunta almeno due gruppi.", "Tick at least two groups.", "Cochez au moins deux groupes.", "Marca al menos dos grupos.", "Hake mindestens zwei Gruppen an."], [" salvato.", " saved.", " enregistré.", " guardado.", " gespeichert."], ["Insieme tolto. I gruppi e le carte restano.", "Set removed. Groups and cards stay.", "Ensemble retiré. Les groupes et les cartes restent.", "Conjunto quitado. Los grupos y las cartas se quedan.", "Sammlung entfernt. Gruppen und Karten bleiben."], ["Nessun prezzo registrato.", "No price recorded.", "Aucun prix enregistré.", "Ningún precio registrado.", "Kein Preis gespeichert."], ["Le variazioni compaiono dal secondo giorno registrato.", "Changes appear from the second recorded day.", "Les variations apparaissent à partir du deuxième jour enregistré.", "Los cambios aparecen desde el segundo día registrado.", "Veränderungen erscheinen ab dem zweiten gespeicherten Tag."], ["Togli l'insieme", "Remove the set", "Retirer l'ensemble", "Quitar el conjunto", "Sammlung entfernen"], ["Togli il gruppo", "Remove the group", "Retirer le groupe", "Quitar el grupo", "Gruppe entfernen"], [" carte", " cards", " cartes", " cartas", " Karten"], ["La lista è vuota. Aggiungi una carta qui sopra, oppure incolla la lista di un mazzo in “Importa una lista”.", "The list is empty. Add a card above, or paste a decklist in “Import a list”.", "La liste est vide. Ajoutez une carte ci-dessus, ou collez une liste de deck dans « Importer une liste ».", "La lista está vacía. Añade una carta arriba, o pega la lista de un mazo en «Importar una lista».", "Die Liste ist leer. Füge oben eine Karte hinzu oder füge eine Deckliste unter „Liste importieren“ ein."], ["Nessuna carta corrisponde ai filtri.", "No card matches the filters.", "Aucune carte ne correspond aux filtres.", "Ninguna carta coincide con los filtros.", "Keine Karte passt zu den Filtern."], ["Carta", "Card", "Carte", "Carta", "Karte"], ["Prezzo", "Price", "Prix", "Precio", "Preis"], ["1 giorno", "1 day", "1 jour", "1 día", "1 Tag"], ["7 giorni", "7 days", "7 jours", "7 días", "7 Tage"], ["30 giorni", "30 days", "30 jours", "30 días", "30 Tage"], ["Andamento", "Trend", "Tendance", "Evolución", "Verlauf"], ["Edizione", "Printing", "Édition", "Edición", "Druck"], ["sì", "yes", "oui", "sí", "ja"], ["sotto obiettivo", "below target", "sous l'objectif", "bajo objetivo", "unter Ziel"], ["Copie di ", "Copies of ", "Exemplaires de ", "Copias de ", "Anzahl von "], ["Prezzo obiettivo di ", "Target price of ", "Prix cible de ", "Precio objetivo de ", "Zielpreis von "], ["Togli ", "Remove ", "Retirer ", "Quitar ", "Entferne "], ["Giorno per giorno", "Day by day", "Jour par jour", "Día a día", "Tag für Tag"], ["Mostra altre 50 (", "Show 50 more (", "Afficher 50 de plus (", "Mostrar 50 más (", "50 weitere zeigen ("], [" rimaste)", " left)", " restantes)", " restantes)", " übrig)"], ["Mostra tutte", "Show all", "Tout afficher", "Mostrar todas", "Alle zeigen"], [" tolta dalla lista.", " removed from the list.", " retirée de la liste.", " quitada de la lista.", " aus der Liste entfernt."], ["Tabella copiata: incollala in un foglio di calcolo.", "Table copied: paste it into a spreadsheet.", "Tableau copié : collez-le dans un tableur.", "Tabla copiada: pégala en una hoja de cálculo.", "Tabelle kopiert: Füge sie in eine Tabellenkalkulation ein."], ["Non riesco a copiare negli appunti.", "Can't copy to the clipboard.", "Impossible de copier dans le presse-papiers.", "No puedo copiar al portapapeles.", "Kopieren in die Zwischenablage nicht möglich."], ["Copia salvata nella cartella dei download.", "Backup saved in your downloads folder.", "Copie enregistrée dans le dossier des téléchargements.", "Copia guardada en la carpeta de descargas.", "Sicherung im Download-Ordner gespeichert."], ["non è una copia di questa app", "it is not a backup of this app", "ce n'est pas une copie de cette app", "no es una copia de esta app", "das ist keine Sicherung dieser App"], ["Dati caricati: ", "Data loaded: ", "Données chargées : ", "Datos cargados: ", "Daten geladen: "], [" carte.", " cards.", " cartes.", " cartas.", " Karten."], ["Non riesco a caricare il file: ", "Can't load the file: ", "Impossible de charger le fichier : ", "No puedo cargar el archivo: ", "Datei kann nicht geladen werden: "], ["Questo browser non ha le notifiche.", "This browser has no notifications.", "Ce navigateur n'a pas de notifications.", "Este navegador no tiene notificaciones.", "Dieser Browser hat keine Benachrichtigungen."], ["Notifiche attive.", "Notifications on.", "Notifications activées.", "Notificaciones activadas.", "Benachrichtigungen an."], ["Notifiche non permesse dal browser.", "The browser doesn't allow notifications.", "Le navigateur n'autorise pas les notifications.", "El navegador no permite notificaciones.", "Der Browser erlaubt keine Benachrichtigungen."], ["Questo browser non permette le notifiche da un file aperto sul computer.", "This browser doesn't allow notifications from a file opened on the computer.", "Ce navigateur n'autorise pas les notifications d'un fichier ouvert sur l'ordinateur.", "Este navegador no permite notificaciones desde un archivo abierto en el ordenador.", "Dieser Browser erlaubt keine Benachrichtigungen aus einer lokal geöffneten Datei."], ["La lista è vuota: aggiungi le prime carte qui sotto.", "The list is empty: add your first cards below.", "La liste est vide : ajoutez vos premières cartes ci-dessous.", "La lista está vacía: añade tus primeras cartas abajo.", "Die Liste ist leer: Füge unten deine ersten Karten hinzu."], ["Prezzi già aggiornati oggi.", "Prices already updated today.", "Prix déjà mis à jour aujourd'hui.", "Precios ya actualizados hoy.", "Preise heute schon aktualisiert."], ["Esempio full art foil", "Sample full art foil", "Exemple full art foil", "Ejemplo full art foil", "Beispiel Full Art Foil"], ["Come funziona", "How it works", "Comment ça marche", "Cómo funciona", "So funktioniert es"], ["Un tracker gratuito dei prezzi Cardmarket per Magic: The Gathering. Funziona nel browser, senza account e senza installare niente.", "A free Cardmarket price tracker for Magic: The Gathering. It runs in your browser, with no account and nothing to install.", "Un suivi gratuit des prix Cardmarket pour Magic: The Gathering. Il fonctionne dans le navigateur, sans compte et sans rien installer.", "Un seguimiento gratuito de precios de Cardmarket para Magic: The Gathering. Funciona en el navegador, sin cuenta y sin instalar nada.", "Ein kostenloser Cardmarket-Preistracker für Magic: The Gathering. Er läuft im Browser, ohne Konto und ohne Installation."], ["Segui qualsiasi carta in qualsiasi edizione, normale o foil, e vedi di quanto è salito o sceso il prezzo di tendenza in 1, 7 e 30 giorni.", "Follow any card in any printing, normal or foil, and see how much its trend price rose or fell over 1, 7 and 30 days.", "Suivez n'importe quelle carte dans n'importe quelle édition, normale ou foil, et voyez de combien son prix tendance a monté ou baissé sur 1, 7 et 30 jours.", "Sigue cualquier carta en cualquier edición, normal o foil, y mira cuánto ha subido o bajado su precio de tendencia en 1, 7 y 30 días.", "Verfolge jede Karte in jedem Druck, normal oder Foil, und sieh, wie stark ihr Trendpreis in 1, 7 und 30 Tagen gestiegen oder gefallen ist."], ["Importa un mazzo intero (Commander, Duel Commander, Modern, Legacy) e trova la versione più cara di ogni carta, anche solo full art, borderless o showcase foil.", "Import a whole deck (Commander, Duel Commander, Modern, Legacy) and find the most expensive version of every card, even full art, borderless or showcase foil only.", "Importez un deck entier (Commander, Duel Commander, Modern, Legacy) et trouvez la version la plus chère de chaque carte, même uniquement full art, borderless ou showcase foil.", "Importa un mazo entero (Commander, Duel Commander, Modern, Legacy) y encuentra la versión más cara de cada carta, incluso solo full art, borderless o showcase foil.", "Importiere ein ganzes Deck (Commander, Duel Commander, Modern, Legacy) und finde die teuerste Version jeder Karte, auch nur Full Art, Borderless oder Showcase Foil."], ["Segui un'intera espansione o tutte le carte sopra un prezzo, legali nel tuo formato, per trovare i rialzi e le occasioni.", "Follow a whole set, or every card above a price that is legal in your format, to spot the spikes and the deals.", "Suivez une extension entière ou toutes les cartes au-dessus d'un prix, légales dans votre format, pour repérer les hausses et les bonnes affaires.", "Sigue una expansión entera o todas las cartas por encima de un precio, legales en tu formato, para detectar subidas y gangas.", "Verfolge eine ganze Erweiterung oder alle Karten über einem Preis, die in deinem Format legal sind, um Preissprünge und Schnäppchen zu finden."], ["Imposta un prezzo obiettivo e ricevi un avviso quando la carta scende sotto quella cifra.", "Set a target price and get an alert when the card drops below it.", "Fixez un prix cible et recevez une alerte quand la carte passe en dessous.", "Fija un precio objetivo y recibe un aviso cuando la carta baje de esa cifra.", "Lege einen Zielpreis fest und werde benachrichtigt, wenn die Karte darunter fällt."], ["Da dove vengono i prezzi?", "Where do the prices come from?", "D'où viennent les prix ?", "¿De dónde salen los precios?", "Woher kommen die Preise?"], ["Dal prezzo di tendenza di Cardmarket per ogni edizione, pubblicato da Scryfall e aggiornato una volta al giorno. L'app non è collegata a Cardmarket né a Scryfall.", "From the Cardmarket trend price of each printing, published by Scryfall and updated once a day. This app is not affiliated with Cardmarket or Scryfall.", "Du prix tendance Cardmarket de chaque édition, publié par Scryfall et mis à jour une fois par jour. Cette app n'est affiliée ni à Cardmarket ni à Scryfall.", "Del precio de tendencia de Cardmarket de cada edición, publicado por Scryfall y actualizado una vez al día. Esta app no está afiliada a Cardmarket ni a Scryfall.", "Vom Cardmarket-Trendpreis jedes Drucks, veröffentlicht von Scryfall und einmal täglich aktualisiert. Diese App ist nicht mit Cardmarket oder Scryfall verbunden."], ["Dove finiscono i miei dati?", "Where is my data stored?", "Où sont stockées mes données ?", "¿Dónde se guardan mis datos?", "Wo werden meine Daten gespeichert?"], ["Solo nel tuo browser: nessuno li vede. Salva una copia ogni tanto per non perdere lo storico.", "Only in your browser: nobody else sees it. Save a backup now and then so you don't lose the history.", "Uniquement dans votre navigateur : personne d'autre ne les voit. Enregistrez une copie de temps en temps pour ne pas perdre l'historique.", "Solo en tu navegador: nadie más los ve. Guarda una copia de vez en cuando para no perder el historial.", "Nur in deinem Browser: Niemand sonst sieht sie. Speichere ab und zu eine Sicherung, damit der Verlauf nicht verloren geht."], ["Le variazioni compaiono dal giorno dopo, perché lo storico parte dal giorno in cui aggiungi la carta.", "Changes show up from the next day, because the history starts on the day you add a card.", "Les variations apparaissent dès le lendemain, car l'historique commence le jour où vous ajoutez la carte.", "Los cambios aparecen desde el día siguiente, porque el historial empieza el día en que añades la carta.", "Veränderungen erscheinen ab dem nächsten Tag, weil der Verlauf am Tag des Hinzufügens beginnt."], ["Perché all'inizio non vedo variazioni?", "Why don't I see any changes at first?", "Pourquoi je ne vois pas de variations au début ?", "¿Por qué al principio no veo cambios?", "Warum sehe ich anfangs keine Veränderungen?"], ["Domande frequenti", "FAQ", "Questions fréquentes", "Preguntas frecuentes", "Häufige Fragen"]];
+RECS.push(...[["Classifiche del mercato", "Market movers", "Mouvements du marché", "Movimientos del mercado", "Marktbewegungen"], ["Periodo", "Period", "Période", "Periodo", "Zeitraum"], ["Direzione", "Direction", "Sens", "Dirección", "Richtung"], ["In rialzo", "Rising", "En hausse", "Al alza", "Steigend"], ["In ribasso", "Falling", "En baisse", "A la baja", "Fallend"], ["Versione", "Version", "Version", "Versión", "Version"], ["Normale", "Normal", "Normale", "Normal", "Normal"], ["Segui", "Follow", "Suivre", "Seguir", "Folgen"], ["Già nella lista", "In your list", "Dans votre liste", "En tu lista", "In deiner Liste"], ["Prezzi dall'archivio comune, aggiornati il ", "Prices from the shared archive, updated ", "Prix de l'archive commune, mis à jour le ", "Precios del archivo común, actualizados el ", "Preise aus dem gemeinsamen Archiv, aktualisiert am "], ["Le classifiche compaiono dal secondo giorno dell'archivio.", "Rankings appear from the archive's second day.", "Les classements apparaissent à partir du deuxième jour de l'archive.", "Las clasificaciones aparecen desde el segundo día del archivo.", "Ranglisten erscheinen ab dem zweiten Tag des Archivs."], ["Nessuna carta per questi filtri.", "No cards for these filters.", "Aucune carte pour ces filtres.", "No hay cartas para estos filtros.", "Keine Karten für diese Filter."], ["Variazione", "Change", "Variation", "Cambio", "Änderung"], ["Prima", "Before", "Avant", "Antes", "Vorher"], ["Le carte che salgono e scendono di più su Cardmarket, tra quelle da almeno 1 €.", "The cards rising and falling the most on Cardmarket, among those worth at least €1.", "Les cartes qui montent et baissent le plus sur Cardmarket, parmi celles d'au moins 1 €.", "Las cartas que más suben y bajan en Cardmarket, entre las de al menos 1 €.", "Die Karten mit den stärksten Anstiegen und Rückgängen auf Cardmarket, ab 1 €."], [" seguita.", " followed.", " suivie.", " seguida.", " wird verfolgt."]]);
+const DICT={};for(const r of RECS){DICT[r[1]]=DICT[r[1]]||r;DICT[r[0]]=r}
+const ITK=RECS.map(r=>r[0]);
+let LANG='en';try{const l=localStorage.getItem('pc-lang');if(LANGS[l])LANG=l}catch{}
+const LOC=()=>LOCS[LANG];
+const FKEYS=ITK.filter(k=>k.length>=5||/^ .+ $/.test(k)).sort((a,b)=>b.length-a.length);
+const FRE=new RegExp(FKEYS.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
+const ITSET=new Set(ITK);
+function tr(src){
+  if(src==null)return src;
+  const t=String(src),k=t.trim();
+  if(DICT[k]){const lead=t.match(/^\s*/)[0],tail=t.match(/\s*$/)[0];return lead+DICT[k][IDX[LANG]]+tail}
+  if(LANG==='it')return t;
+  return t.replace(FRE,m=>ITSET.has(m)?DICT[m][IDX[LANG]]:m);
+}
+const ORIG=new WeakMap(),ATTRS=['placeholder','aria-label','title'];
+function trText(n){
+  const p=n.parentNode;if(!p||/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName)||!n.data.trim())return;
+  const o=ORIG.get(n);const src=(o&&o.out===n.data)?o.src:n.data;const out=tr(src);ORIG.set(n,{src,out});if(out!==n.data)n.data=out;
+}
+function trAttrs(el){
+  let m=ORIG.get(el);if(!m){m={};ORIG.set(el,m)}
+  for(const a of ATTRS){const v=el.getAttribute&&el.getAttribute(a);if(v==null)continue;const o=m[a];const src=(o&&o.out===v)?o.src:v;const out=tr(src);m[a]={src,out};if(out!==v)el.setAttribute(a,out)}
+}
+function trTree(root){
+  if(root.nodeType===3)return trText(root);
+  if(root.nodeType!==1)return;
+  trAttrs(root);
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);
+  for(let n=w.nextNode();n;n=w.nextNode())n.nodeType===3?trText(n):trAttrs(n);
+}
+const trObs=new MutationObserver(ms=>{for(const m of ms){
+  if(m.type==='childList')m.addedNodes.forEach(trTree);
+  else if(m.type==='characterData')trText(m.target);
+  else if(m.type==='attributes')trAttrs(m.target);
+}});
+function applyLang(){
+  document.documentElement.lang=LANG;if(!window.__T0)window.__T0=document.title;document.title=LANG==='en'?window.__T0:tr('Prezzi Cardmarket')+' – Magic: The Gathering';
+  $('#pv').dataset.load=tr('Carico…');
+  trTree(document.body);
+}
+{
+  const sel=$('#selLang');
+  sel.innerHTML=Object.entries(LANGS).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('');
+  sel.value=LANG;
+  sel.addEventListener('change',()=>{LANG=sel.value;try{localStorage.setItem('pc-lang',LANG)}catch{}applyLang();render();if(typeof renderMk==='function')renderMk()});
+  applyLang();
+  trObs.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:ATTRS});
+}
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>iso(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return iso(d)};
+const eur=n=>n==null?'—':n.toLocaleString(LOC(),{style:'currency',currency:'EUR'});
+const pctTxt=p=>p==null?'—':(p>0?'▲ +':p<0?'▼ ':'')+p.toLocaleString(LOC(),{maximumFractionDigits:1,minimumFractionDigits:1})+'%';
+const cls=p=>p==null||Math.abs(p)<0.05?'flat':p>0?'up':'down';
+const fmtDate=s=>s?new Date(s+'T12:00:00').toLocaleDateString(LOC(),{day:'numeric',month:'short'}):'—';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const DIR='~/CardWatch',FILE='~/CardWatch/dati.json';
+let D={cards:[],settings:{threshold:10}},desk=null,live=false,busy=false,sortKey='m1',sortDir=-1,shown=50,prints=[],removed=null;
+
+/* ---------- data ---------- */
+const series=c=>Object.keys(c.h||{}).sort().map(d=>[d,c.h[d]]).filter(e=>e[1]!=null);
+function stats(c){
+  const s=series(c);if(!s.length)return{last:null,d1:null,d7:null,d30:null,e1:null,e7:null,e30:null,s:[]};
+  const [ld,last]=s[s.length-1];
+  const base=days=>{if(days===1)return s.length>1?s[s.length-2][1]:null;const lim=addDays(ld,-days);let b=null;for(const[d,v]of s)if(d<=lim)b=v;return b};
+  const pc=b=>b?(last-b)/b*100:null,ec=b=>b?last-b:null;const b1=base(1),b7=base(7),b30=base(30);
+  return{last,ld,d1:pc(b1),d7:pc(b7),d30:pc(b30),e1:ec(b1),e7:ec(b7),e30:ec(b30),s};
+}
+function idb(){return new Promise((res,rej)=>{const q=indexedDB.open('prezzi-cardmarket',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+async function kv(op,val){
+  try{const db=await idb();return await new Promise((res,rej)=>{const tx=db.transaction('kv',op==='get'?'readonly':'readwrite');const st=tx.objectStore('kv');const q=op==='get'?st.get('dati'):st.put(val,'dati');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+  catch(e){if(op==='get')return localStorage.getItem('prezzi-cardmarket');localStorage.setItem('prezzi-cardmarket',val)}
+}
+async function load(){
+  try{const t=await kv('get');if(t){const j=JSON.parse(t);if(j&&Array.isArray(j.cards))D={settings:{threshold:10},...j}}}
+  catch(e){say('Non riesco a leggere i dati: '+e.message)}
+}
+async function save(){
+  try{await kv('put',JSON.stringify(D))}
+  catch(e){say('Non riesco a salvare nel browser: '+e.message+'. Salva una copia dei dati.')}
+}
+
+/* ---------- Scryfall direttamente dal browser ---------- */
+let lastCall=0;
+async function throttle(){const w=lastCall+110-Date.now();if(w>0)await sleep(w);lastCall=Date.now()}
+async function curl(args,input){
+  let method='GET',url='',get=false;const params=new URLSearchParams();
+  for(let i=0;i<args.length;i++){const a=args[i];
+    if(a==='--get')get=true;
+    else if(a==='--data-urlencode'){const x=args[++i];const k=x.indexOf('=');params.append(x.slice(0,k),x.slice(k+1))}
+    else if(a==='-X')method=args[++i];
+    else if(a==='-H'||a==='--data-binary')i++;
+    else if(/^https:\/\//.test(a))url=a}
+  if(get&&[...params].length)url+=(url.includes('?')?'&':'?')+params.toString();
+  await throttle();
+  let r;
+  try{r=await fetch(url,{method,headers:input!=null?{'Content-Type':'application/json','Accept':'application/json'}:{'Accept':'application/json'},body:input??undefined})}
+  catch(e){throw new Error('Scryfall non raggiungibile da questo browser ('+e.message+')')}
+  let j=null;try{j=await r.json()}catch{}
+  if(j&&j.object==='error')throw new Error(j.details||'Errore di Scryfall');
+  if(!j)throw new Error('Scryfall ha risposto '+r.status);
+  return j;
+}
+const API='https://api.scryfall.com';
+function cleanCm(u){
+  try{const x=new URL(u);if(!/(^|\.)cardmarket\.com$/.test(x.hostname))return u;
+    const keep=new URLSearchParams();for(const k of['idProduct','searchString'])if(x.searchParams.has(k))keep.set(k,x.searchParams.get(k));
+    x.search=keep.toString();x.hash='';return x.toString()}catch{return u}
+}
+const priceOf=(card,foil)=>{const v=foil?card.prices?.eur_foil:card.prices?.eur;return v==null?null:parseFloat(v)};
+const fromCard=(card,foil,qty)=>({id:card.id,name:card.name,set:String(card.set||'').toUpperCase(),setName:card.set_name||'',cn:card.collector_number||'',foil:!!foil,qty:qty||1,cm:card.purchase_uris?.cardmarket||'',h:{}});
+async function collection(ids){
+  const found=[],missing=[];
+  for(let i=0;i<ids.length;i+=75){
+    const j=await curl(['-X','POST','-H','Content-Type: application/json','--data-binary','@-',API+'/cards/collection'],JSON.stringify({identifiers:ids.slice(i,i+75)}));
+    found.push(...(j.data||[]));missing.push(...(j.not_found||[]));
+    await sleep(150);
+  }
+  return{found,missing};
+}
+
+/* ---------- archivio comune (data/) ---------- */
+let SRV=null;const shardCache=new Map();
+async function srvInit(){try{const q=await fetch('data/meta.json',{cache:'no-cache'});if(!q.ok)return;const m=await q.json();if(m&&Array.isArray(m.days)&&m.days.length){if(SRV&&SRV.updated!==m.updated)shardCache.clear();SRV=m}}catch{}}
+function shard(sh){if(!shardCache.has(sh))shardCache.set(sh,fetch('data/h/'+sh+'.json',{cache:'no-cache'}).then(q=>q.ok?q.json():{}).catch(()=>({}))); return shardCache.get(sh)}
+function decS(x,n){const o=x?x.split(',').map(v=>v===''?null:+v):[];while(o.length<n)o.push(null);return o.slice(0,n)}
+async function srvSync(cards){
+  const found=new Set();if(!SRV||!cards.length)return found;
+  const by=new Map();
+  for(const c of cards){if(!/^[0-9a-f-]{36}$/.test(c.id))continue;const sh=c.id.slice(0,2);if(!by.has(sh))by.set(sh,[]);by.get(sh).push(c)}
+  await Promise.all([...by].map(async([sh,l])=>{const d=await shard(sh);for(const c of l){const v=d[c.id];if(!v)continue;const arr=decS(c.foil?v.f:v.e,SRV.days.length);c.h=c.h||{};for(const k of Object.keys(c.h))if(k>SRV.updated)delete c.h[k];SRV.days.forEach((day,i)=>{if(arr[i]!=null)c.h[day]=arr[i]/100});found.add(c)}}));
+  return found;
+}
+const thin=()=>D.cards.filter(c=>Object.keys(c.h||{}).length<2);
+async function update(manual){
+  if(busy||!live||!D.cards.length)return;
+  busy=true;$('#bUpd').disabled=true;say('Aggiorno '+D.cards.length+' carte…');
+  try{
+    let n=0,rest=D.cards;
+    if(SRV){await srvInit();const f=await srvSync(D.cards);n=f.size;rest=D.cards.filter(c=>!f.has(c))}
+    if(rest.length){
+      const {found}=await collection([...new Set(rest.map(c=>c.id))].map(id=>({id})));
+      const byId=new Map(found.map(c=>[c.id,c]));const t=today();
+      for(const c of rest){const k=byId.get(c.id);if(!k)continue;c.h=c.h||{};c.h[t]=priceOf(k,c.foil);if(k.purchase_uris?.cardmarket)c.cm=k.purchase_uris.cardmarket;n++}
+    }
+    D.lastUpdate=SRV?SRV.updated:today();await save();render();renderMk();say(n+' prezzi aggiornati.');
+    await alertMovers();
+  }catch(e){say('Aggiornamento non riuscito: '+e.message)}
+  busy=false;$('#bUpd').disabled=false;
+}
+/* ---------- classifiche del mercato ---------- */
+let MK=null,mkShown=50,mkCur=[];
+const FMT_LABEL={commander:'Commander',duel:'Duel Commander',modern:'Modern',legacy:'Legacy',vintage:'Vintage',pauper:'Pauper',pioneer:'Pioneer',standard:'Standard'};
+async function mkInit(){
+  if(!SRV)return;
+  try{const q=await fetch('data/movers.json',{cache:'no-cache'});if(!q.ok)return;MK=await q.json()}catch{return}
+  const sel=$('#mkL');sel.replaceChildren(...[['','Qualsiasi formato'],...MK.formats.map(f=>[f,FMT_LABEL[f]||f])].map(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;return o}));
+  $('#mk').hidden=false;renderMk();
+}
+function renderMk(){
+  if(!MK)return;
+  const key=$('#mkW').value+'_'+$('#mkF').value+'_'+$('#mkD').value,fi=MK.formats.indexOf($('#mkL').value),min=parseFloat($('#mkMin').value)||0,foil=$('#mkF').value==='f';
+  $('#mkDate').textContent="Prezzi dall'archivio comune, aggiornati il "+fmtDate(MK.updated);
+  mkCur=(MK.lists[key]||[]).filter(e=>(fi<0||((e[7]>>fi)&1))&&e[5]/100>=min);
+  if(!mkCur.length){$('#mkList').innerHTML='<div class="empty">'+((SRV.days.length<2)?"Le classifiche compaiono dal secondo giorno dell'archivio.":'Nessuna carta per questi filtri.')+'</div>';return}
+  const have=new Set(D.cards.map(c=>c.id+(c.foil?'|f':'')));
+  $('#mkList').innerHTML='<div class="scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>Prima</th><th>Variazione</th><th></th></tr></thead><tbody>'+
+    mkCur.slice(0,mkShown).map((e,i)=>{const p=(e[5]-e[6])/e[6]*100;const link=/^https:\/\//.test(e[8])?'<a href="'+esc(e[8])+'" target="_blank" rel="noopener" data-pv="'+esc(e[0])+'">'+esc(e[1])+'</a>':esc(e[1]);
+      return '<tr><td class="name">'+link+(foil?' <span class="sample">foil</span>':'')+'<small>'+esc(e[3])+' · '+esc(e[2])+' #'+esc(e[4])+'</small></td><td>'+esc(eur(e[5]/100))+'</td><td>'+esc(eur(e[6]/100))+'</td><td class="'+cls(p)+'">'+esc(pctTxt(p))+'</td><td>'+
+      (have.has(e[0]+(foil?'|f':''))?'<span class="msg" style="color:var(--mute)">Già nella lista</span>':'<button class="x" data-follow="'+i+'">Segui</button>')+'</td></tr>'}).join('')+'</tbody></table></div>'+
+    (mkCur.length>mkShown?'<div class="more"><button data-mkmore="1">Mostra altre 50 ('+(mkCur.length-mkShown)+' rimaste)</button></div>':'');
+}
+for(const id of ['mkW','mkD','mkF','mkL'])$('#'+id).addEventListener('change',()=>{mkShown=50;renderMk()});
+$('#mkMin').addEventListener('input',()=>{mkShown=50;renderMk()});
+$('#mkList').addEventListener('click',async e=>{
+  if(e.target.closest('[data-mkmore]')){mkShown+=50;renderMk();return}
+  const b=e.target.closest('[data-follow]');if(!b||!live)return;
+  const m=mkCur[+b.dataset.follow];if(!m)return;const foil=$('#mkF').value==='f';
+  if(D.cards.some(c=>c.id===m[0]&&c.foil===foil))return;
+  const c={id:m[0],name:m[1],set:m[2],setName:m[3],cn:m[4],foil,qty:1,cm:m[8],h:{},manual:true};
+  D.cards.push(c);await srvSync([c]);await save();render();renderMk();say(m[1]+' seguita.');
+});
+async function alertMovers(){
+  const thr=D.settings.threshold||10;
+  const big=D.cards.map(c=>({c,p:stats(c).d1})).filter(x=>x.p!=null&&Math.abs(x.p)>=thr).sort((a,b)=>Math.abs(b.p)-Math.abs(a.p));
+  const hits=D.cards.filter(c=>{const s=stats(c);return c.target>0&&s.last!=null&&s.last<=c.target&&c.hitOn!==s.ld});
+  if(!big.length&&!hits.length)return;
+  try{
+    const show=b=>{try{if('Notification' in window&&Notification.permission==='granted')new Notification('Prezzi Cardmarket',{body:b.slice(0,300)})}catch{}};
+    const msgs=[];
+    if(hits.length){const body='Sotto il tuo prezzo: '+hits.slice(0,4).map(c=>c.name+(c.foil?' (foil)':'')+' '+eur(stats(c).last)).join(', ');
+      show(body);msgs.push(body);hits.forEach(c=>c.hitOn=stats(c).ld);await save()}
+    if(big.length){const body='Movimenti forti: '+big.slice(0,4).map(x=>x.c.name+(x.c.foil?' (foil)':'')+' '+pctTxt(x.p)).join(', ')+(big.length>4?' e altre '+(big.length-4):'');
+      show(body);msgs.push(body)}
+    say(msgs.join(' · '));
+  }catch{}
+}
+
+/* ---------- add / import ---------- */
+let sugT=0;
+$('#qName').addEventListener('input',e=>{
+  clearTimeout(sugT);const q=e.target.value.trim();if(!live||q.length<3)return;
+  sugT=setTimeout(async()=>{try{const j=await curl(['--get','--data-urlencode','q='+q,API+'/cards/autocomplete']);
+    const dl=$('#sugg');dl.replaceChildren(...(j.data||[]).slice(0,12).map(n=>{const o=document.createElement('option');o.value=n;return o}))}catch{}},350);
+});
+async function findPrints(){
+  const q=$('#qName').value.trim();if(!q||!live)return;
+  $('#bFind').disabled=true;say('Cerco le edizioni di '+q+'…');
+  try{
+    const named=await curl(['--get','--data-urlencode','fuzzy='+q,API+'/cards/named']);
+    const j=await curl(['--get','--data-urlencode','q=!"'+named.name+'" game:paper','--data-urlencode','unique=prints','--data-urlencode','order=released',API+'/cards/search']);
+    prints=(j.data||[]);
+    const sel=$('#selPrint');
+    sel.replaceChildren(...prints.map((c,i)=>{const o=document.createElement('option');o.value=i;
+      o.textContent=c.set_name+' ('+String(c.set).toUpperCase()+' #'+c.collector_number+') — '+eur(priceOf(c,false))+(c.prices?.eur_foil?' · foil '+eur(priceOf(c,true)):'');return o}));
+    sel.hidden=false;$('#addRow').hidden=false;say(prints.length+' edizioni di '+named.name+'.');
+  }catch(e){say('Non trovata: '+e.message)}
+  $('#bFind').disabled=false;
+}
+$('#bFind').onclick=findPrints;
+$('#qName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();findPrints()}});
+$('#bAdd').onclick=async()=>{
+  const c=prints[+$('#selPrint').value];if(!c)return;const foil=$('#cFoil').checked;
+  if(D.cards.some(x=>x.id===c.id&&x.foil===foil))return say('Questa edizione è già nella lista.');
+  const r=fromCard(c,foil,Math.max(1,parseInt($('#nQty').value)||1));r.manual=true;r.h[today()]=priceOf(c,foil);const tg=parseFloat($('#nTgt').value);if(tg>0)r.target=tg;
+  D.cards.push(r);await srvSync([r]);await save();render();renderMk();say(c.name+' aggiunta.');
+  $('#qName').value='';$('#selPrint').hidden=true;$('#addRow').hidden=true;$('#cFoil').checked=false;$('#nQty').value=1;$('#nTgt').value='';
+};
+$('#bImp').onclick=async()=>{
+  if(!live)return;const lines=$('#tList').value.split(/\r?\n/);const want=new Map();const secs=new Set();let sec=null;
+  for(let l of lines){l=l.replace(/^\s*\/\/.*$/,'').replace(/\*F\*/i,'').trim();
+    const h=l.match(/^#+\s*(.+)$/);if(h){sec=h[1].trim().slice(0,60);secs.add(sec);continue}
+    if(!l||/^(sideboard|commander|deck|mainboard)\b/i.test(l))continue;
+    const m=l.match(/^(\d+)\s*x?\s+(.+)$/i);let q=1,n=l;if(m){q=+m[1];n=m[2]}
+    n=n.replace(/\s+\([A-Za-z0-9]{2,6}\)(\s+\S+)?$/,'').replace(/\s+#?\d+[a-z]?$/,'').trim();
+    if(n){const k=n.toLowerCase(),o=want.get(k)||{name:n,qty:0,gr:new Set()};o.qty=sec?1:o.qty+q;if(sec)o.gr.add(sec);want.set(k,o)}}
+  if(!want.size)return say('Non ho trovato nomi di carte nel testo.');
+  const mode=$('#iMode').value,group=$('#iGroup').value.trim().slice(0,60);
+  const multi=secs.size>0;const tag=(r,w)=>{const l=multi?[...(w?.gr||[])]:(group?[group]:[]);gs(r);for(const g of l)if(!r.groups.includes(g))r.groups.push(g)};
+  if(busy)return;busy=true;$('#bImp').disabled=true;say('Importo '+want.size+' carte…');
+  try{
+    const t=today();let added=0;const missing=[];let fallback=0;
+    if(mode==='def'){
+      const res=await collection([...want.values()].map(w=>({name:w.name})));missing.push(...res.missing.map(m=>m.name));
+      for(const c of res.found){
+        const w=want.get(c.name.toLowerCase())||want.get(c.name.split(' // ')[0].toLowerCase())||{qty:1,gr:new Set()};
+        const ex=D.cards.find(x=>x.id===c.id&&!x.foil);if(ex){tag(ex,w);continue}
+        const r=fromCard(c,false,w.qty);r.h[t]=priceOf(c,false);if(!group&&!multi)r.manual=true;tag(r,w);D.cards.push(r);added++}
+    }else{
+      let n=0;
+      for(const w of want.values()){
+        n++;say('Controllo tutte le versioni: '+n+' di '+want.size+' ('+w.name+')');
+        try{
+          const prints=await allPrints('!"'+w.name+'" game:paper');
+          const spec=p=>p.full_art||p.border_color==='borderless'||(p.frame_effects||[]).some(f=>f==='showcase'||f==='extendedart');
+          let pool=mode==='max'?prints:prints.filter(spec);
+          let top=dearest(pool,mode==='specfoil'?[true]:[false,true]);
+          if(!top){top=dearest(prints,[false,true]);if(top)fallback++}
+          if(!top){missing.push(w.name);continue}
+          const ex=D.cards.find(x=>x.id===top.p.id&&x.foil===top.foil);if(ex){tag(ex,w);continue}
+          const r=fromCard(top.p,top.foil,w.qty);r.h[t]=top.v;if(!group&&!multi)r.manual=true;tag(r,w);D.cards.push(r);added++;
+        }catch{missing.push(w.name)}
+        await sleep(120);
+      }
+    }
+    await srvSync(thin());
+    if(multi&&group){D.sets=D.sets||{};D.sets[group]=[...new Set([...(D.sets[group]||[]),...secs])]}
+    await save();renderGroups(multi&&group?'S:'+group:(group||undefined));shown=50;render();$('#tList').value='';
+    say((multi?secs.size+' mazzi, ':'')+added+' carte importate'+(fallback?' ('+fallback+' senza versioni speciali: presa la più cara)':'')+(missing.length?'; non trovate: '+missing.slice(0,8).join(', '):'')+'.');
+  }catch(e){say('Importazione non riuscita: '+e.message)}
+  $('#bImp').disabled=false;busy=false;
+};
+async function allPrints(q){
+  let k=await curl(['--get','--data-urlencode','q='+q,'--data-urlencode','unique=prints',API+'/cards/search']);
+  const out=[...(k.data||[])];
+  while(k.has_more&&/^https:\/\/api\.scryfall\.com\//.test(k.next_page||'')){await sleep(120);k=await curl([k.next_page]);out.push(...(k.data||[]))}
+  return out;
+}
+function dearest(prints,finishes){let top=null;for(const p of prints)for(const foil of finishes){const v=priceOf(p,foil);if(v!=null&&(!top||v>top.v))top={p,foil,v}}return top}
+$('#bGrp').onclick=async()=>{
+  if(!live)return;const code=$('#gSet').value.trim().toLowerCase();
+  if(!/^[a-z0-9]{2,6}$/.test(code))return say('Scrivi il codice dell\'espansione, da 2 a 6 tra lettere e numeri.');
+  const kinds=[];const lab=[];
+  if($('#gFull').checked){kinds.push('is:full');lab.push('full art')}
+  if($('#gBord').checked){kinds.push('is:borderless');lab.push('borderless')}
+  if($('#gShow').checked){kinds.push('frame:showcase');lab.push('showcase')}
+  if(!kinds.length)return say('Scegli almeno un tipo: full art, borderless o showcase.');
+  const foil=$('#gFoil').checked;
+  const q='set:'+code+' ('+kinds.join(' or ')+') game:paper'+(foil?' is:foil':'');
+  const group=code.toUpperCase()+' '+lab.join(' + ')+(foil?' foil':'');
+  await addGroup(q,group,foil,800,'order=set',$('#bGrp'));
+};
+$('#bPrice').onclick=async()=>{
+  if(!live)return;const min=Math.max(5,parseFloat($('#pMin').value)||100);
+  const fs=$('#pFmt'),fmt=fs.value;
+  const q='eur>='+min+' game:paper'+(fmt?' legal:'+fmt:'');
+  await addGroup(q,tr('Sopra {n} €').replace('{n}',min)+(fmt?' · '+fs.options[fs.selectedIndex].text:''),false,2000,'order=eur',$('#bPrice'));
+};
+$('#bTop').onclick=async()=>{
+  if(!live||busy)return;const N=Math.min(300,Math.max(10,parseInt($('#tN').value)||100));
+  const fs=$('#pFmt'),fmt=fs.value,fq=' game:paper'+(fmt?' legal:'+fmt:'');
+  const group=tr('Le {n} più care').replace('{n}',N)+(fmt?' · '+fs.options[fs.selectedIndex].text:'');
+  const btn=$('#bTop');btn.disabled=true;busy=true;
+  try{
+    /* 1. candidates: the cards with the highest-priced prints */
+    say('Cerco le carte più costose…');
+    const cand=new Map();
+    let j=await curl(['--get','--data-urlencode','q=eur>=5'+fq,'--data-urlencode','unique=prints','--data-urlencode','order=eur','--data-urlencode','dir=desc',API+'/cards/search']);
+    let pages=1;
+    const take=d=>{for(const c of d){const k=c.oracle_id||c.name;if(!cand.has(k))cand.set(k,c)}};
+    take(j.data||[]);
+    while(j.has_more&&cand.size<N*2&&pages<20&&/^https:\/\/api\.scryfall\.com\//.test(j.next_page||'')){await sleep(150);j=await curl([j.next_page]);take(j.data||[]);pages++}
+    /* 2. for each candidate, every print: keep the dearest version, normal or foil */
+    const ids=[...cand.values()].slice(0,N*2);const best=[];let n=0;
+    for(const c of ids){
+      n++;say('Controllo tutte le versioni: '+n+' di '+ids.length+' ('+c.name+')');
+      try{
+        let k=await curl(['--get','--data-urlencode','q='+(c.oracle_id?'oracleid:'+c.oracle_id:'!"'+c.name+'"')+' game:paper','--data-urlencode','unique=prints',API+'/cards/search']);
+        const prints=[...(k.data||[])];
+        while(k.has_more&&/^https:\/\/api\.scryfall\.com\//.test(k.next_page||'')){await sleep(120);k=await curl([k.next_page]);prints.push(...(k.data||[]))}
+        let top=null;
+        for(const p of prints)for(const foil of[false,true]){const v=priceOf(p,foil);if(v!=null&&(!top||v>top.v))top={p,foil,v}}
+        if(top)best.push(top);
+      }catch{}
+      await sleep(120);
+    }
+    best.sort((a,b)=>b.v-a.v);
+    const t=today();let added=0;
+    for(const b of best.slice(0,N)){
+      const ex=D.cards.find(x=>x.id===b.p.id&&x.foil===b.foil);
+      if(ex){gs(ex);if(!ex.groups.includes(group))ex.groups.push(group);ex.h[t]=b.v;continue}
+      const r=fromCard(b.p,b.foil,1);r.groups=[group];r.h[t]=b.v;D.cards.push(r);added++}
+    /* cards that left the top N keep the group, so their fall stays visible */
+    await srvSync(thin());await save();renderGroups(group);sortKey='price';sortDir=-1;syncSort();shown=50;render();
+    document.querySelector('#list').scrollIntoView({behavior:'smooth',block:'start'});
+    say('Classifica pronta: '+Math.min(N,best.length)+' carte, '+added+' nuove nella lista.');
+  }catch(e){say('Classifica non riuscita: '+e.message)}
+  btn.disabled=false;busy=false;
+};
+async function addGroup(q,group,foil,cap,order,btn){
+  btn.disabled=true;say('Cerco le carte di '+group+'…');
+  try{
+    let j=await curl(['--get','--data-urlencode','q='+q,'--data-urlencode','unique=prints','--data-urlencode',order,API+'/cards/search']);
+    const all=[...(j.data||[])];
+    while(j.has_more&&/^https:\/\/api\.scryfall\.com\//.test(j.next_page||'')&&all.length<cap){await sleep(150);say('Cerco le carte di '+group+'… '+all.length);j=await curl([j.next_page]);all.push(...(j.data||[]))}
+    const t=today();let added=0;
+    for(const c of all){
+      const ex=D.cards.find(x=>x.id===c.id&&x.foil===foil);
+      if(ex){gs(ex);if(!ex.groups.includes(group))ex.groups.push(group);continue}
+      const r=fromCard(c,foil,1);r.groups=[group];r.h[t]=priceOf(c,foil);D.cards.push(r);added++}
+    await srvSync(thin());await save();renderGroups(group);shown=50;render();document.querySelector('#list').scrollIntoView({behavior:'smooth',block:'start'});
+    say(added+' carte aggiunte al gruppo '+group+(all.length>added?' ('+(all.length-added)+' erano già nella lista)':'')+'.');
+  }catch(e){say('Gruppo non trovato: '+e.message)}
+  btn.disabled=false;
+}
+const gs=c=>{if(!c.groups)c.groups=c.group?[c.group]:[];delete c.group;return c.groups};
+function renderGroups(pick){
+  const sel=$('#selGrp'),cur=pick??sel.value;const gl=[...new Set(D.cards.flatMap(c=>gs(c)))].sort();
+  const sets=D.sets||{};const sn=Object.keys(sets).sort();
+  const opt=(v,l)=>{const o=document.createElement('option');o.value=v;o.textContent=l;return o};
+  const og=(label,items)=>{const g=document.createElement('optgroup');g.label=label;g.append(...items);return g};
+  const kids=[opt('','Tutte le carte'),opt('-','Carte singole')];
+  if(sn.length)kids.push(og('Insiemi',sn.map(n=>opt('S:'+n,n+' ('+sets[n].length+' gruppi)'))));
+  if(gl.length)kids.push(og('Gruppi',gl.map(g=>opt(g,g))));
+  sel.replaceChildren(...kids);
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'';sel.hidden=!gl.length;
+  const picked=new Set([...document.querySelectorAll('#setPick input:checked')].map(i=>i.value));
+  $('#setPick').innerHTML=gl.length?gl.map(g=>'<label class="chk"><input type="checkbox" value="'+esc(g)+'"'+(picked.has(g)?' checked':'')+'> '+esc(g)+'</label>').join(''):'<span class="note">Prima crea qualche gruppo, per esempio importando i mazzi con un nome di gruppo.</span>';
+  $('#setList').innerHTML=sn.map(n=>'<span class="chip" style="background:var(--soft);color:var(--ink);border:1px solid var(--line)">'+esc(n)+': '+esc(sets[n].join(' + '))+' <button class="x" data-unset="'+esc(n)+'">Togli</button></span>').join('');
+}
+$('#selGrp').addEventListener('change',()=>{shown=50;render()});
+$('#bDelGrp').onclick=async()=>{
+  const g=$('#selGrp').value;if(!live||!g||g==='-')return;
+  const snap={cards:JSON.parse(JSON.stringify(D.cards)),sets:JSON.parse(JSON.stringify(D.sets||{}))};
+  if(g.startsWith('S:')){const n=g.slice(2);delete D.sets[n];removed={snap};await save();renderGroups('');shown=50;render();toast('Insieme '+n+' tolto: i gruppi restano.');return}
+  let gone=0,kept=0;
+  D.cards=D.cards.filter(c=>{const l=gs(c);if(!l.includes(g))return true;c.groups=l.filter(x=>x!==g);if(c.groups.length||c.manual){kept++;return true}gone++;return false});
+  for(const n of Object.keys(D.sets||{})){D.sets[n]=D.sets[n].filter(x=>x!==g);if(!D.sets[n].length)delete D.sets[n]}
+  removed={snap};await save();renderGroups('');shown=50;render();
+  toast('Gruppo '+g+' tolto: '+(gone===1?'1 carta eliminata':gone+' carte eliminate')+(kept?', '+(kept===1?'1 resta':kept+' restano')+' perché sono in altri gruppi o le avevi aggiunte tu':'')+'.');
+};
+$('#bSet').onclick=async()=>{
+  if(!live)return;const n=$('#setName').value.trim().slice(0,60);
+  const gsel=[...document.querySelectorAll('#setPick input:checked')].map(i=>i.value);
+  if(!n)return say('Dai un nome all\'insieme.');if(gsel.length<2)return say('Spunta almeno due gruppi.');
+  D.sets=D.sets||{};D.sets[n]=gsel;await save();
+  for(const i of document.querySelectorAll('#setPick input'))i.checked=false;$('#setName').value='';
+  renderGroups('S:'+n);shown=50;render();say('Insieme '+n+' salvato.');
+};
+$('#setList').addEventListener('click',async e=>{const b=e.target.closest('[data-unset]');if(!b||!live)return;delete D.sets[b.dataset.unset];await save();renderGroups();render();say('Insieme tolto. I gruppi e le carte restano.')});
+$('#nThr').addEventListener('change',e=>{D.settings.threshold=Math.min(100,Math.max(1,+e.target.value||10));if(live)save()});
+
+/* ---------- image preview ---------- */
+const imgCache=new Map();let pvId=null,pvT=0;
+async function imgFor(id){
+  if(!/^[0-9a-f-]{36}$/.test(id))return null;
+  if(imgCache.has(id))return imgCache.get(id);
+  const url=API+'/cards/'+id+'?format=image&version=normal';
+  await new Promise(res=>{const im=new Image();im.onload=im.onerror=res;im.src=url});
+  imgCache.set(id,url);return url;
+}
+function placePv(x,y){const pv=$('#pv'),w=250,h=w*680/488;let l=x+18,t=y-h/2;if(l+w>innerWidth-8)l=x-w-18;t=Math.max(8,Math.min(t,innerHeight-h-8));pv.style.left=l+'px';pv.style.top=t+'px'}
+const listEl=document;
+listEl.addEventListener('mouseover',e=>{
+  const a=e.target.closest('[data-pv]');if(!a||!live)return;const id=a.dataset.pv;if(id===pvId)return;pvId=id;placePv(e.clientX,e.clientY);
+  clearTimeout(pvT);pvT=setTimeout(async()=>{
+    const pv=$('#pv');pv.style.backgroundImage='';pv.classList.add('on','load');
+    try{const u=await imgFor(id);if(pvId!==id)return;if(!u){pv.classList.remove('on','load');return}pv.style.backgroundImage='url("'+u+'")';pv.classList.remove('load')}
+    catch{if(pvId===id)pv.classList.remove('on','load')}
+  },150);
+});
+listEl.addEventListener('mousemove',e=>{if(pvId)placePv(e.clientX,e.clientY)});
+listEl.addEventListener('mouseout',e=>{const a=e.target.closest('[data-pv]');if(a&&!a.contains(e.relatedTarget)){pvId=null;clearTimeout(pvT);$('#pv').classList.remove('on','load')}});
+addEventListener('scroll',()=>{pvId=null;$('#pv').classList.remove('on','load')},{passive:true});
+
+/* ---------- render ---------- */
+function spark(s){
+  const v=s.slice(-30).map(e=>e[1]);if(v.length<2)return'<svg class="sp" aria-hidden="true"></svg>';
+  const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;
+  const pts=v.map((y,i)=>(i/(v.length-1)*96).toFixed(1)+','+(23-(y-mn)/r*20).toFixed(1)).join(' ');
+  const col=v[v.length-1]>=v[0]?'var(--up)':'var(--down)';
+  return'<svg class="sp" viewBox="0 0 96 26" aria-hidden="true"><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+}
+const open_=new Set();const keyOf=c=>c.id+(c.foil?'|f':'');
+function days(s){
+  const v=s.slice(-30);if(!v.length)return'Nessun prezzo registrato.';
+  const mx=Math.max(...v.map(e=>e[1]))||1;
+  const out=v.map((e,i)=>{const p=i?v[i-1][1]:null;const pc=p?(e[1]-p)/p*100:null;
+    return'<div class="day"><span style="text-align:left">'+esc(fmtDate(e[0]))+'</span><i style="width:'+(e[1]/mx*100).toFixed(1)+'%"></i><span>'+esc(eur(e[1]))+'</span><span class="'+cls(pc)+'">'+esc(pctTxt(pc))+'</span></div>'}).reverse();
+  return'<div class="days">'+out.join('')+'</div>'+(v.length<2?'<p class="note">Le variazioni compaiono dal secondo giorno registrato.</p>':'');
+}
+function render(){
+  const all=D.cards.map((c,i)=>({c,i,...stats(c)}));
+  const f=$('#qFilter').value.trim().toLowerCase(),g=$('#selGrp').value;
+  const lo=parseFloat($('#pLo').value),hi=parseFloat($('#pHi').value);
+  const rows=all.filter(r=>(!g||(g==='-'?!gs(r.c).length:g.startsWith('S:')?(D.sets?.[g.slice(2)]||[]).some(x=>gs(r.c).includes(x)):gs(r.c).includes(g)))&&(!f||(r.c.name+' '+r.c.setName+' '+r.c.set).toLowerCase().includes(f))&&(isNaN(lo)||(r.last!=null&&r.last>=lo))&&(isNaN(hi)||(r.last!=null&&r.last<=hi)));
+  let tot=0,prev=0,up=0,down=0;
+  for(const r of rows){if(r.last==null)continue;const q=r.c.qty||1;tot+=r.last*q;prev+=(r.e1!=null?r.last-r.e1:r.last)*q;if(r.d1>0.05)up++;else if(r.d1<-0.05)down++}
+  $('#lTot').textContent=g||f||!isNaN(lo)||!isNaN(hi)?'Valore di quello che vedi':'Valore totale della lista';
+  $('#sTot').textContent=eur(tot);
+  const dt=tot-prev;$('#sDelta').textContent=rows.length?(dt>=0?'+':'')+eur(dt):'—';$('#sDelta').className=dt>0.004?'up':dt<-0.004?'down':'';
+  $('#sUpDown').textContent=up+' / '+down;$('#sDate').textContent=fmtDate(D.lastUpdate);
+  const mv=rows.filter(r=>r.d1!=null&&Math.abs(r.d1)>=0.05).sort((a,b)=>Math.abs(b.d1)-Math.abs(a.d1)).slice(0,5);
+  $('#movers').innerHTML=mv.map(r=>'<span class="chip">'+esc(r.c.name)+' <span class="'+cls(r.d1)+'">'+esc(pctTxt(r.d1))+'</span></span>').join('');
+  {const b=$('#bDelGrp');b.hidden=!g||g==='-';b.textContent=g.startsWith('S:')?'Togli l\'insieme':'Togli il gruppo'}
+  $('#count').textContent=rows.length===all.length?all.length+' carte':rows.length+' di '+all.length+' carte';
+  const val=r=>sortKey==='name'?r.c.name.toLowerCase():sortKey==='price'?r.last:sortKey==='m1'?(r.d1==null?null:Math.abs(r.d1)):r[sortKey];
+  const list=rows.slice().sort((a,b)=>{const x=val(a),y=val(b);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return-1;return(x<y?-1:x>y?1:0)*(sortKey==='name'?sortDir:sortDir)});
+  if(!D.cards.length){$('#list').innerHTML='<div class="empty">La lista è vuota. Aggiungi una carta qui sopra, oppure incolla la lista di un mazzo in “Importa una lista”.</div>';return}
+  if(!rows.length){$('#list').innerHTML='<div class="empty">Nessuna carta corrisponde ai filtri.</div>';return}
+  const page=list.slice(0,shown);
+  const arrow=k=>sortKey===k||(k==='d1'&&sortKey==='m1')?(sortDir<0?' ↓':' ↑'):'';
+  $('#list').innerHTML='<div class="scroll"><table class="stack"><thead><tr><th data-k="name">Carta'+arrow('name')+'</th><th>Copie</th><th data-k="price">Prezzo'+arrow('price')+'</th><th>Avvisami sotto €</th><th data-k="d1">1 giorno'+arrow('d1')+'</th><th data-k="d7">7 giorni'+arrow('d7')+'</th><th data-k="d30">30 giorni'+arrow('d30')+'</th><th>Andamento</th><th></th><th></th></tr></thead><tbody>'+
+    page.map(r=>{const c=r.c;const link=/^https:\/\//.test(c.cm)?'<a href="'+esc(cleanCm(c.cm))+'" target="_blank" rel="noopener" data-pv="'+esc(c.id)+'">'+esc(c.name)+'</a>':esc(c.name);
+      return'<tr><td class="name">'+link+(c.foil?' <span class="sample">foil</span>':'')+'<small>'+esc(c.setName)+' · '+esc(c.set)+' #'+esc(c.cn)+(gs(c).length?' · '+esc(gs(c).join(', ')):'')+'</small></td>'+
+      '<td><input class="q" type="number" min="1" value="'+esc(c.qty||1)+'" data-i="'+r.i+'" aria-label="Copie di '+esc(c.name)+'"></td>'+
+      '<td>'+esc(eur(r.last))+(c.target>0&&r.last!=null&&r.last<=c.target?' <span class="sample">sotto obiettivo</span>':'')+'</td><td><input class="q t" type="number" min="0" step="0.01" value="'+esc(c.target||'')+'" data-i="'+r.i+'" aria-label="Prezzo obiettivo di '+esc(c.name)+'" style="width:90px"></td>'+'<td class="'+cls(r.d1)+'">'+esc(pctTxt(r.d1))+'</td><td class="'+cls(r.d7)+'">'+esc(pctTxt(r.d7))+'</td><td class="'+cls(r.d30)+'">'+esc(pctTxt(r.d30))+'</td>'+
+      '<td>'+spark(r.s)+'</td><td><button class="dd" data-day="'+esc(keyOf(c))+'" aria-expanded="'+open_.has(keyOf(c))+'">Giorno per giorno</button></td><td><button class="x" data-del="'+r.i+'" aria-label="Togli '+esc(c.name)+'">Togli</button></td></tr>'+(open_.has(keyOf(c))?'<tr class="det"><td colspan="10">'+days(r.s)+'</td></tr>':'')}).join('')+'</tbody></table></div>'+
+    (list.length>shown?'<div class="more"><button data-more="50">Mostra altre 50 ('+(list.length-shown)+' rimaste)</button>'+(list.length-shown>50?'<button data-more="all">Mostra tutte</button>':'')+'</div>':'');
+}
+$('#list').addEventListener('click',async e=>{
+  const th=e.target.closest('th[data-k]');if(th){let k=th.dataset.k;const same=sortKey===k||(k==='d1'&&sortKey==='m1');sortDir=k==='name'?1:same?-sortDir:-1;if(k==='name'&&sortKey==='name')sortDir=-sortDir;sortKey=k;syncSort();shown=50;render();return}
+  const mo=e.target.closest('[data-more]');if(mo){shown=mo.dataset.more==='all'?1e9:shown+50;render();return}
+  const dd=e.target.closest('[data-day]');if(dd){const k=dd.dataset.day;open_.has(k)?open_.delete(k):open_.add(k);render();return}
+  const b=e.target.closest('[data-del]');if(b&&live){const i=+b.dataset.del;removed={c:D.cards[i],i};D.cards.splice(i,1);await save();render();renderGroups();toast(removed.c.name+' tolta dalla lista.')}
+});
+$('#list').addEventListener('change',async e=>{if(e.target.matches('input.t')&&live){const c=D.cards[+e.target.dataset.i];const v=parseFloat(e.target.value);if(v>0)c.target=v;else delete c.target;delete c.hitOn;await save();render();return}if(e.target.matches('input.q')&&live){D.cards[+e.target.dataset.i].qty=Math.max(1,parseInt(e.target.value)||1);await save();render()}});
+const reset=()=>{shown=50;render()};
+$('#qFilter').addEventListener('input',reset);$('#pLo').addEventListener('input',reset);$('#pHi').addEventListener('input',reset);
+$('#selSort').addEventListener('change',e=>{const[k,d]=e.target.value.split('|');sortKey=k;sortDir=+d;reset()});
+function syncSort(){const v=sortKey+'|'+sortDir;const sel=$('#selSort');if([...sel.options].some(o=>o.value===v))sel.value=v}
+let tT=0;function toast(m){$('#tMsg').textContent=m;$('#toast').classList.add('on');clearTimeout(tT);tT=setTimeout(()=>$('#toast').classList.remove('on'),6000)}
+$('#tUndo').onclick=async()=>{if(!removed)return;if(removed.snap){D.cards=removed.snap.cards;D.sets=removed.snap.sets;removed=null;$('#toast').classList.remove('on');await save();renderGroups(removed?.g);render();return}D.cards.splice(removed.i,0,removed.c);removed=null;$('#toast').classList.remove('on');await save();renderGroups();render()};
+function say(m){$('#msg').textContent=m}
+$('#bCopy').onclick=async()=>{
+  const lines=[['Carta','Edizione','Foil','Copie','Prezzo','1 giorno','7 giorni','30 giorni'].map(tr).join('\t'),...D.cards.map(c=>{const s=stats(c);return[c.name,c.setName,c.foil?tr('sì'):'',c.qty||1,s.last??'',s.d1?.toFixed(1)??'',s.d7?.toFixed(1)??'',s.d30?.toFixed(1)??''].join('\t')})];
+  try{await navigator.clipboard.writeText(lines.join('\n'));say('Tabella copiata: incollala in un foglio di calcolo.')}catch{say('Non riesco a copiare negli appunti.')}
+};
+$('#bExport').onclick=()=>{const b=new Blob([JSON.stringify(D)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='prezzi-cardmarket-'+today()+'.json';document.body.append(a);a.click();a.remove();say('Copia salvata nella cartella dei download.')};
+$('#fImport').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!j||!Array.isArray(j.cards))throw new Error('non è una copia di questa app');D={settings:{threshold:10},...j};await save();$('#nThr').value=D.settings.threshold||10;renderGroups();shown=50;render();say('Dati caricati: '+D.cards.length+' carte.')}catch(err){say('Non riesco a caricare il file: '+err.message)}e.target.value=''};
+$('#bNotif').onclick=async()=>{try{if(!('Notification' in window))return say('Questo browser non ha le notifiche.');const p=await Notification.requestPermission();say(p==='granted'?'Notifiche attive.':'Notifiche non permesse dal browser.')}catch{say('Questo browser non permette le notifiche da un file aperto sul computer.')}};
+
+/* ---------- icon ---------- */
+function drawIcon(){const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');
+  g.fillStyle='#1c1626';g.beginPath();g.roundRect(8,8,240,240,52);g.fill();
+  g.strokeStyle='#c99a2e';g.lineWidth=14;g.lineJoin='round';g.lineCap='round';g.beginPath();g.moveTo(44,176);g.lineTo(98,122);g.lineTo(136,150);g.lineTo(210,72);g.stroke();
+  g.fillStyle='#c99a2e';g.beginPath();g.moveTo(214,58);g.lineTo(222,110);g.lineTo(176,80);g.closePath();g.fill();
+  g.fillStyle='#f4efe6';g.font='700 64px Georgia,serif';g.fillText('€',52,226);return cv.toDataURL('image/png')}
+
+/* ---------- start ---------- */
+function sample(){
+  const t=today(),mk=(name,setName,set,cn,vals,qty)=>{const h={};vals.forEach((v,i)=>h[addDays(t,i-vals.length+1)]=v);return{id:name,name,setName,set,cn,qty,foil:false,cm:'',h}};
+  D={settings:{threshold:10},lastUpdate:t,cards:[
+    mk('Rhystic Study','Prophecy','PCY','45',[38.5,38.9,39.4,40.2,41,40.8,42.6,44.9],1),
+    mk('Cyclonic Rift','Return to Ravnica','RTR','35',[26.1,25.9,25.4,25.2,24.8,24.1,23.9,22.7],1),
+    mk('Bitterblossom','Morningtide','MOR','58',[17.2,17.1,17.4,17.3,17.6,17.5,17.5,17.9],1),
+    mk('Spellstutter Sprite','Modern Masters 2017','MM3','58',[1.1,1.1,1.12,1.1,1.09,1.1,1.1,1.1],1),
+    mk('Fierce Guardianship','Commander 2020','C20','35',[48,47.5,46.9,47.2,46,45.1,44.8,41.3],1)]};D.cards[4].target=42;D.cards[1].foil=true;D.cards[0].groups=['Esempio full art foil'];D.cards[2].groups=['Esempio full art foil'];
+}
+async function start(){
+  live=true;await load();await srvInit();
+  if(SRV){$('#faqNew').hidden=true;mkInit()}
+  $('#nThr').value=D.settings.threshold||10;renderGroups();render();
+  $('#bUpd').onclick=()=>update(true);
+  const due=()=>SRV?D.lastUpdate!==SRV.updated:D.lastUpdate!==today();
+  if(!D.cards.length)say('La lista è vuota: aggiungi le prime carte qui sotto.');
+  else if(due()||thin().length)update(false);else say('Prezzi già aggiornati oggi.');
+  setInterval(async()=>{const u=SRV?.updated;await srvInit();if(SRV&&SRV.updated!==u){MK=null;await mkInit()}if(due())update(false)},60*60*1000);
+}
+start();
+}
+</script>
+</body>
+</html>
