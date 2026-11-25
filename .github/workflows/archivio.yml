@@ -1,0 +1,60 @@
+name: Archivio prezzi e sito
+
+on:
+  schedule:
+    - cron: "23 11 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install ijson
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Aggiorna l'archivio dei prezzi
+        run: python "mtg-price-tracker github/scripts/build.py" --out _site/data --prev "${{ steps.pages.outputs.base_url }}/data"
+
+      - name: Copia il sito
+        run: cp -r "mtg-price-tracker github/site/." _site/
+
+      - name: Copia di sicurezza dei dati (14 giorni)
+        uses: actions/upload-artifact@v4
+        with:
+          name: archivio-${{ github.run_number }}
+          path: _site/data
+          retention-days: 14
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
