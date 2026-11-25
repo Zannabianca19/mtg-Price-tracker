@@ -98,11 +98,30 @@ def cents(p):
         return None
 
 
+def iter_cards(path):
+    """Legge il bulk sia nel formato nuovo (.jsonl.gz, una carta per riga) sia in quello vecchio (.json)."""
+    if path.endswith(".gz"):
+        import gzip
+        with gzip.open(path, "rt", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip().rstrip(",")
+                if line and line not in ("[", "]"):
+                    yield json.loads(line)
+    elif path.endswith(".jsonl"):
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    yield json.loads(line)
+    else:
+        import ijson
+        with open(path, "rb") as f:
+            yield from ijson.items(f, "item")
+
+
 def read_bulk(path):
-    import ijson
     cur, info = {}, {}
-    with open(path, "rb") as f:
-        for c in ijson.items(f, "item"):
+    if True:
+        for c in iter_cards(path):
             if "paper" not in (c.get("games") or []):
                 continue
             pr = c.get("prices") or {}
@@ -128,11 +147,13 @@ def latest_bulk():
     resp = json.loads(http("https://api.scryfall.com/bulk-data"))
     items = resp.get("data", []) if isinstance(resp, dict) else resp
     item = next((i for i in items if isinstance(i, dict) and i.get("type") == "default_cards"), None)
-    if not item or not item.get("download_uri"):
+    url = item and (item.get("jsonl_download_uri") or item.get("download_uri"))
+    if not url:
         print("Risposta di Scryfall inattesa:", json.dumps(resp)[:1500])
         sys.exit("Non trovo il file default_cards nell'elenco di Scryfall.")
-    print("Scarico", item["download_uri"], "aggiornato", item.get("updated_at"), "dimensione", item.get("size"))
-    return http(item["download_uri"], dest="default-cards.json")
+    dest = "default-cards" + (".jsonl.gz" if url.endswith(".jsonl.gz") else ".jsonl" if url.endswith(".jsonl") else ".json")
+    print("Scarico", url, "aggiornato", item.get("updated_at"), flush=True)
+    return http(url, dest=dest)
 
 
 def main():
