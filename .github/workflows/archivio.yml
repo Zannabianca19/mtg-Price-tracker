@@ -35,7 +35,7 @@ jobs:
       - name: Aggiorna l'archivio dei prezzi
         env:
           CARDTRADER_TOKEN: ${{ secrets.CARDTRADER_TOKEN }}
-        run: python "mtg-price-tracker github/scripts/build.py" --out _site/data --prev "${{ steps.pages.outputs.base_url }}/data"
+        run: python "mtg-price-tracker github/scripts/build.py" --game mtg --out _site/data --prev "${{ steps.pages.outputs.base_url }}/data"
 
       - name: Copia il sito
         run: cp -r "mtg-price-tracker github/site/." _site/

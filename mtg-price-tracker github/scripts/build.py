@@ -18,7 +18,7 @@ Uso:
   python build.py --out _site/data --prev https://utente.github.io/repo/data
   python build.py --out out --prev ./vecchi-dati --bulk default-cards.json --today 2026-11-25   (prove in locale)
 """
-import argparse, datetime, json, os, sys, time, urllib.error, urllib.request
+import argparse, datetime, json, os, re, sys, time, urllib.error, urllib.request
 
 DAYS_KEEP = 120         # archivio completo (a/), letto solo da questo script
 CLIENT_DAYS = 35        # quello che scarica l'app (h/): bastano 30 giorni + margine
@@ -26,7 +26,13 @@ MIN_CENTS = 100          # classifiche solo per carte da almeno 1 € (prima e d
 TOP = 300                # voci per classifica
 MARKET_MIN = 100         # elenco "tutte le carte" (market.json): edizioni da almeno 1 €, normale o foil
 CM_PREFIX = "https://www.cardmarket.com/en/Magic/Products"
-PRICE_GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json"
+PRICE_GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_{cm}.json"
+# Ogni gioco è una scheda: codici su Cardmarket e CardTrader, cosa vuol dire "versione" (le due serie e/f, x/y).
+# L'archivio di ogni gioco sta in data/<id>/ e il sito sceglie il gioco con il menu.
+GAMES = {
+    "mtg": {"name": "Magic: The Gathering", "cm": 1, "ct": 1, "variants": ["Normale", "Foil"]},
+}
+GAME = dict(GAMES["mtg"], id="mtg")   # il gioco in lavorazione (lo sceglie --game)
 # Serie salvate per ogni edizione: e/f = prezzo di tendenza normale/foil (Scryfall),
 # s/t = media delle vendite a 7 giorni normale/foil (listino pubblico di Cardmarket).
 SERIES = ("e", "f", "s", "t", "x", "y")
@@ -65,6 +71,18 @@ def http(url, dest=None, tries=4):
             err = e
         time.sleep(5 * (k + 1))
     raise err
+
+
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+
+
+def shard_of(cid):
+    """File XX.json della carta: per Magic le prime due cifre dell'id Scryfall, per gli altri giochi
+    il numero finale dell'id modulo 256 (lo stesso calcolo lo fa il sito)."""
+    if UUID_RE.match(cid):
+        return cid[:2]
+    m = re.search(r"(\d+)$", cid)
+    return f"{int(m.group(1)) % 256:02x}" if m else "00"
 
 
 def dec_right(s, n):
@@ -191,7 +209,7 @@ def read_bulk(path):
 def read_price_guide():
     """Media vendite 7 giorni per idProduct, in centesimi. Se il listino non si scarica, si va avanti senza."""
     try:
-        pg = json.loads(http(PRICE_GUIDE))
+        pg = json.loads(http(PRICE_GUIDE.format(cm=GAME["cm"])))
         out = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil")))
                for it in pg.get("priceGuides", []) if it.get("idProduct")}
         print(f"Listino Cardmarket del {pg.get('createdAt')}: {len(out)} prodotti.")
@@ -235,7 +253,7 @@ def read_cardtrader(token, cards):
     # Tutte le espansioni Magic: su CardTrader le versioni speciali (borderless, showcase...) stanno spesso
     # in espansioni a parte con un codice diverso da Scryfall. Prima quelle con lo stesso codice delle carte care.
     wanted = {st.lower() for st, _, n, f in cards.values() if max(n or 0, f or 0) >= CT_MIN}
-    exps = sorted((e for e in exps if e.get("game_id") == 1), key=lambda e: (e.get("code") or "").lower() not in wanted)
+    exps = sorted((e for e in exps if e.get("game_id") == GAME["ct"]), key=lambda e: (e.get("code") or "").lower() not in wanted)
     cm2sid = {}
     for sid, (_, cmid, _, _) in cards.items():
         if cmid:
@@ -316,10 +334,19 @@ def main():
     ap.add_argument("--bulk", default="")
     ap.add_argument("--today", default="")
     ap.add_argument("--guide", default="", help="listino Cardmarket locale (prove)")
+    ap.add_argument("--game", default="mtg", choices=sorted(GAMES))
     a = ap.parse_args()
     today = a.today or datetime.datetime.now(datetime.timezone.utc).date().isoformat()
-
-    old_days, hist, old_weeks, wk = read_prev(a.prev)
+    global GAME
+    GAME = dict(GAMES[a.game], id=a.game)
+    a.out = os.path.join(a.out, a.game)          # data/<gioco>/
+    os.makedirs(a.out, exist_ok=True)
+    prev_game = a.prev.rstrip("/") + "/" + a.game if a.prev else ""
+    old_days, hist, old_weeks, wk = read_prev(prev_game)
+    if not old_days and a.prev and a.game == "mtg":
+        # prima volta con l'archivio diviso per gioco: lo storico di Magic stava direttamente in data/
+        print("Storico non trovato in data/mtg: lo prendo da data/ (posizione vecchia).")
+        old_days, hist, old_weeks, wk = read_prev(a.prev)
     cur, info = read_bulk(a.bulk or latest_bulk())
     if len(cur) < 1000 and not a.bulk:
         sys.exit("Troppo pochi prezzi nel bulk: qualcosa non va, non pubblico.")
@@ -389,7 +416,7 @@ def main():
             if any(v is not None for v in arr):
                 out[k] = enc(arr)
         if out:
-            weekly[cid[:2]][cid] = out
+            weekly[shard_of(cid)][cid] = out
     cut = len(days) - len(cdays)
     shard_data = {sh: {} for sh in SHARDS}
     market, set_names = [], {}
@@ -414,7 +441,7 @@ def main():
             rec["lo"] = now["lo"]
         if now.get("ctn"):
             rec["ctn"] = now["ctn"]
-        shard_data[cid[:2]][cid] = rec
+        shard_data[shard_of(cid)][cid] = rec
         if cid in info and max(ne[-1] or 0, nf[-1] or 0) >= MARKET_MIN:
             nm, st, sn, cn, mask, cm = info[cid]
             set_names[st] = sn
@@ -479,7 +506,7 @@ def main():
                   f, separators=(",", ":"), ensure_ascii=False)
     market.sort(key=lambda r: -max(r[6] or 0, r[10] or 0))
     with open(os.path.join(a.out, "market.json"), "w", encoding="utf-8") as f:
-        json.dump({"updated": today, "formats": FORMATS, "cmPrefix": CM_PREFIX, "sets": set_names,
+        json.dump({"updated": today, "game": GAME, "formats": FORMATS, "cmPrefix": CM_PREFIX, "sets": set_names,
                    "fields": ["id", "name", "set", "cn", "legal", "cm", "price", "base1", "base7", "base30",
                               "foil", "foilBase1", "foilBase7", "foilBase30",
                               "sales7", "sales7Base1", "sales7Base7", "sales7Base30",

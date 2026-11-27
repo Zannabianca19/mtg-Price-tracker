@@ -178,6 +178,7 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
   <a class="brand" href="#top" id="top"><svg viewBox="0 0 22 28" aria-hidden="true"><rect x="1" y="1" width="20" height="26" rx="2.5" fill="none" stroke="#f7d046" stroke-width="2"/><path d="M5 19l4.5-5 3.5 2.6L17 11" fill="none" stroke="#f7d046" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardmarket Price Tracker</a>
   <nav><a href="#mk">All cards</a><a href="#mine">Your list</a><a href="#how-it-works">How it works</a></nav>
   <button class="inst" id="bInst" hidden>Install the app</button>
+  <label class="lang" id="gameBox" hidden>Game <select id="selGame"></select></label>
   <label class="lang">Language <select id="selLang"></select></label>
 </div></header>
 <div class="howinst" id="howInst" hidden role="dialog" aria-labelledby="hiT"><div class="wrap">
@@ -331,6 +332,8 @@ RECS.push(...[["Il grafico compare dal secondo giorno registrato.", "The chart a
 RECS.push(...[["Installa l'app", "Install the app", "Installer l'app", "Instalar la app", "App installieren"], ["Metti il sito nella schermata Home del telefono", "Put the site on your phone's home screen", "Mettez le site sur l'écran d'accueil de votre téléphone", "Pon el sitio en la pantalla de inicio del teléfono", "Leg die Seite auf den Startbildschirm deines Handys"], ["Su iPhone, in Safari: tocca il pulsante Condividi (il quadrato con la freccia verso l'alto), poi «Aggiungi alla schermata Home».", "On iPhone, in Safari: tap the Share button (the square with the arrow pointing up), then «Add to Home Screen».", "Sur iPhone, dans Safari : touchez le bouton Partager (le carré avec la flèche vers le haut), puis «Sur l'écran d'accueil».", "En iPhone, en Safari: toca el botón Compartir (el cuadrado con la flecha hacia arriba) y luego «Añadir a pantalla de inicio».", "Auf dem iPhone in Safari: Tippe auf Teilen (das Quadrat mit dem Pfeil nach oben), dann «Zum Home-Bildschirm»."], ["Su Android, in Chrome: tocca il menu ⋮ in alto a destra, poi «Installa app» o «Aggiungi a schermata Home».", "On Android, in Chrome: tap the menu ⋮ at the top right, then «Install app» or «Add to Home screen».", "Sur Android, dans Chrome : touchez le menu ⋮ en haut à droite, puis «Installer l'application» ou «Ajouter à l'écran d'accueil».", "En Android, en Chrome: toca el menú ⋮ arriba a la derecha y luego «Instalar aplicación» o «Añadir a pantalla de inicio».", "Auf Android in Chrome: Tippe oben rechts auf das Menü ⋮, dann «App installieren» oder «Zum Startbildschirm hinzufügen»."], ["L'app si apre a tutto schermo, come le altre del telefono. Le carte che segui restano nel browser in cui le hai aggiunte: per spostarle usa «Salva una copia dei dati» e «Carica una copia».", "The app opens full screen, like the others on your phone. The cards you follow stay in the browser where you added them: use «Save a backup» and «Load a backup» to move them.", "L'app s'ouvre en plein écran, comme les autres de votre téléphone. Les cartes suivies restent dans le navigateur où vous les avez ajoutées : utilisez «Enregistrer une copie» et «Charger une copie» pour les déplacer.", "La app se abre a pantalla completa, como las demás del teléfono. Las cartas que sigues se quedan en el navegador donde las añadiste: usa «Guardar una copia» y «Cargar una copia» para moverlas.", "Die App öffnet sich im Vollbild wie die anderen auf deinem Handy. Deine Karten bleiben im Browser, in dem du sie hinzugefügt hast: Nutze «Sicherung speichern» und «Sicherung laden», um sie zu übertragen."], ["Chiudi", "Close", "Fermer", "Cerrar", "Schließen"]]);
 RECS.push(...[["in vendita da ", "on sale from ", "en vente dès ", "a la venta desde ", "im Angebot ab "], ["Prezzo più basso tra le offerte su Cardmarket, in qualsiasi condizione, dal listino di ieri mattina", "Lowest price among the offers on Cardmarket, in any condition, from yesterday morning's price guide", "Prix le plus bas parmi les offres sur Cardmarket, tout état confondu, d'après le guide d'hier matin", "Precio más bajo entre las ofertas de Cardmarket, en cualquier estado, de la guía de ayer por la mañana", "Niedrigster Preis der Angebote auf Cardmarket, in jedem Zustand, aus dem Preisführer von gestern früh"], ["Per il prezzo obiettivo il sito usa il più alto tra la tendenza e la copia più economica in vendita: così l'avviso scatta solo quando puoi davvero comprare sotto la tua cifra, e non per una sola copia rovinata svenduta.", "For the target price the site uses the higher of the trend and the cheapest copy on sale: so the alert goes off only when you can really buy below your price, and not because of a single damaged copy sold off cheaply.", "Pour le prix cible, le site prend le plus élevé entre la tendance et l'exemplaire le moins cher en vente : l'alerte ne se déclenche que si vous pouvez vraiment acheter sous votre prix, et pas pour un seul exemplaire abîmé bradé.", "Para el precio objetivo el sitio usa el más alto entre la tendencia y la copia más barata a la venta: así el aviso solo salta cuando de verdad puedes comprar por debajo de tu cifra, y no por una sola copia dañada malvendida.", "Für den Zielpreis nimmt die Seite den höheren Wert aus Trend und günstigstem Angebot: So kommt die Meldung nur, wenn du wirklich unter deinem Preis kaufen kannst, und nicht wegen eines einzelnen beschädigten Billigangebots."]]);
 RECS.push(...[["EX o meglio (CardTrader)", "EX or better (CardTrader)", "EX ou mieux (CardTrader)", "EX o mejor (CardTrader)", "EX oder besser (CardTrader)"], [". Prezzi: media delle 3 offerte più economiche in inglese, condizione Mint, Near Mint o Slightly Played, su", ". Prices: average of the 3 cheapest English offers in Mint, Near Mint or Slightly Played condition, on", ". Prix : moyenne des 3 offres en anglais les moins chères, en état Mint, Near Mint ou Slightly Played, sur", ". Precios: media de las 3 ofertas en inglés más baratas, en estado Mint, Near Mint o Slightly Played, en", ". Preise: Durchschnitt der 3 günstigsten englischen Angebote in Mint, Near Mint oder Slightly Played, auf"], ["Offerte EX+ in inglese su CardTrader", "English EX+ offers on CardTrader", "Offres EX+ en anglais sur CardTrader", "Ofertas EX+ en inglés en CardTrader", "Englische EX+-Angebote auf CardTrader"], ["EX+ su CardTrader: ", "EX+ on CardTrader: ", "EX+ sur CardTrader : ", "EX+ en CardTrader: ", "EX+ auf CardTrader: "], ["Media delle 3 offerte più economiche in inglese, Mint, Near Mint o Slightly Played", "Average of the 3 cheapest English offers, Mint, Near Mint or Slightly Played", "Moyenne des 3 offres en anglais les moins chères, Mint, Near Mint ou Slightly Played", "Media de las 3 ofertas en inglés más baratas, Mint, Near Mint o Slightly Played", "Durchschnitt der 3 günstigsten englischen Angebote, Mint, Near Mint oder Slightly Played"], ["I prezzi «EX o meglio» vengono dalle offerte su CardTrader: la media delle 3 copie in inglese più economiche in condizione Mint, Near Mint o Slightly Played, aggiornata una volta al giorno. Questa app non è collegata a CardTrader.", "The «EX or better» prices come from the offers on CardTrader: the average of the 3 cheapest English copies in Mint, Near Mint or Slightly Played condition, updated once a day. This app is not affiliated with CardTrader.", "Les prix «EX ou mieux» viennent des offres sur CardTrader : la moyenne des 3 exemplaires en anglais les moins chers en état Mint, Near Mint ou Slightly Played, mise à jour une fois par jour. Cette app n'est pas liée à CardTrader.", "Los precios «EX o mejor» vienen de las ofertas de CardTrader: la media de las 3 copias en inglés más baratas en estado Mint, Near Mint o Slightly Played, actualizada una vez al día. Esta app no está vinculada a CardTrader.", "Die Preise «EX oder besser» stammen aus den Angeboten auf CardTrader: Durchschnitt der 3 günstigsten englischen Exemplare in Mint, Near Mint oder Slightly Played, einmal täglich aktualisiert. Diese App ist nicht mit CardTrader verbunden."]]);
+RECS.push(...[["Gioco", "Game", "Jeu", "Juego", "Spiel"]]);
+RECS.push(...[["Inglese", "English", "Anglais", "Inglés", "Englisch"], ["Giapponese", "Japanese", "Japonais", "Japonés", "Japanisch"]]);
 const DICT={};for(const r of RECS){DICT[r[1]]=DICT[r[1]]||r;DICT[r[0]]=r}
 const ITK=RECS.map(r=>r[0]);
 let LANG='en';try{const l=localStorage.getItem('pc-lang');if(LANGS[l])LANG=l}catch{}
@@ -455,15 +458,24 @@ async function collection(ids){
 }
 
 /* ---------- archivio comune (data/) ---------- */
-let SRV=null;const shardCache=new Map();
-async function srvInit(){try{const q=await fetch('data/meta.json',{cache:'no-cache'});if(!q.ok)return;const m=await q.json();if(m&&Array.isArray(m.days)&&m.days.length){if(SRV&&SRV.updated!==m.updated)shardCache.clear();SRV=m}}catch{}}
-function shard(sh){if(!shardCache.has(sh))shardCache.set(sh,fetch('data/h/'+sh+'.json',{cache:'no-cache'}).then(q=>q.ok?q.json():{}).catch(()=>({}))); return shardCache.get(sh)}
+/* giochi: ogni gioco ha il suo archivio in data/<id>/ (scheda completa nel market.json del gioco) */
+const GAMES=[{id:'mtg',name:'Magic: The Gathering'}];
+let GAME=(()=>{let g=new URLSearchParams(location.search).get('g')||'';try{g=g||localStorage.getItem('pc-game')||''}catch{}return GAMES.some(x=>x.id===g)?g:'mtg'})();
+const DATA=g=>'data/'+(g||GAME)+'/';
+const gameOf=c=>c.game||'mtg';
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+/* file h/XX.json di una carta: per Magic le prime due cifre dell'id Scryfall, per gli altri giochi il numero finale modulo 256 */
+const shKey=id=>UUID.test(id)?id.slice(0,2):(/(\d+)$/.test(id)?(+id.match(/(\d+)$/)[1]%256).toString(16).padStart(2,'0'):null);
+let SRV=null;const SRVG=new Map(),shardCache=new Map();
+async function srvMeta(g){if(SRVG.has(g))return SRVG.get(g);try{const q=await fetch(DATA(g)+'meta.json',{cache:'no-cache'});if(!q.ok)return null;const m=await q.json();if(m&&Array.isArray(m.days)&&m.days.length){SRVG.set(g,m);return m}}catch{}return null}
+async function srvInit(){try{const q=await fetch(DATA()+'meta.json',{cache:'no-cache'});if(!q.ok)return;const m=await q.json();if(m&&Array.isArray(m.days)&&m.days.length){const old=SRVG.get(GAME);if(old&&old.updated!==m.updated)for(const k of[...shardCache.keys()])if(k.startsWith(GAME+'/'))shardCache.delete(k);SRVG.set(GAME,m);SRV=m}}catch{}}
+function shard(sh,g){g=g||GAME;const k=g+'/'+sh;if(!shardCache.has(k))shardCache.set(k,fetch(DATA(g)+'h/'+sh+'.json',{cache:'no-cache'}).then(q=>q.ok?q.json():{}).catch(()=>({})));return shardCache.get(k)}
 function decS(x,n){const o=x?x.split(',').map(v=>v===''?null:+v):[];while(o.length<n)o.push(null);return o.slice(0,n)}
 async function srvSync(cards){
   const found=new Set();if(!SRV||!cards.length)return found;
   const by=new Map();
-  for(const c of cards){if(!/^[0-9a-f-]{36}$/.test(c.id))continue;const sh=c.id.slice(0,2);if(!by.has(sh))by.set(sh,[]);by.get(sh).push(c)}
-  await Promise.all([...by].map(async([sh,l])=>{const d=await shard(sh);for(const c of l){const v=d[c.id];if(!v)continue;const lo=v.lo&&v.lo[c.foil?1:0];if(lo!=null)c.low=lo/100;else delete c.low;{const xs=decS(c.foil?v.y:v.x,SRV.days.length),xl=xs[xs.length-1];if(xl!=null){c.ctx=xl/100;c.ctn=v.ctn&&v.ctn[c.foil?1:0];c.ctid=v.ctn&&v.ctn[2]}else{delete c.ctx;delete c.ctn;delete c.ctid}}const arr=decS(c.foil?v.f:v.e,SRV.days.length);c.h=c.h||{};for(const k of Object.keys(c.h))if(k>SRV.updated)delete c.h[k];SRV.days.forEach((day,i)=>{if(arr[i]!=null)c.h[day]=arr[i]/100});found.add(c)}}));
+  for(const c of cards){const sh=shKey(c.id);if(!sh)continue;const k=gameOf(c)+'/'+sh;if(!by.has(k))by.set(k,[]);by.get(k).push(c)}
+  await Promise.all([...by].map(async([k,l])=>{const[g,sh]=k.split('/');const M=g===GAME?SRV:await srvMeta(g);if(!M)return;const d=await shard(sh,g);for(const c of l){const v=d[c.id];if(!v)continue;const lo=v.lo&&v.lo[c.foil?1:0];if(lo!=null)c.low=lo/100;else delete c.low;{const xs=decS(c.foil?v.y:v.x,M.days.length),xl=xs[xs.length-1];if(xl!=null){c.ctx=xl/100;c.ctn=v.ctn&&v.ctn[c.foil?1:0];c.ctid=v.ctn&&v.ctn[2]}else{delete c.ctx;delete c.ctn;delete c.ctid}}const arr=decS(c.foil?v.f:v.e,M.days.length);c.h=c.h||{};for(const k of Object.keys(c.h))if(k>M.updated)delete c.h[k];M.days.forEach((day,i)=>{if(arr[i]!=null)c.h[day]=arr[i]/100});found.add(c)}}));
   return found;
 }
 const refPrice=(c,last)=>last==null?null:Math.max(last,c.low||0);
@@ -499,8 +511,18 @@ async function update(manual){
   $('#bInstX').onclick=()=>{box.hidden=true};
   show();
 }
-/* ---------- tutte le carte (data/market.json) ---------- */
-const MKP=[["q", "mkQ", ""], ["p", "mkP", "t"], ["s", "mkS", "ea"], ["w", "mkW", null], ["f", "mkF", "n"], ["l", "mkL", ""], ["min", "mkMin", ""]];
+
+/* ---------- scelta del gioco ---------- */
+{
+  const sel=$('#selGame');
+  sel.replaceChildren(...GAMES.map(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.name;return o}));
+  sel.value=GAME;$('#gameBox').hidden=GAMES.length<2;
+  sel.addEventListener('change',async()=>{GAME=sel.value;try{localStorage.setItem('pc-game',GAME)}catch{}
+    SRV=SRVG.get(GAME)||null;MK=null;mkKey=null;mkOpen.clear();mkShown=50;$('#mk').hidden=true;
+    await srvInit();if(SRV)await mkInit();else mkSaveUrl()});
+}
+/* ---------- tutte le carte (data/<gioco>/market.json) ---------- */
+const MKP=[["g", "selGame", "mtg"], ["q", "mkQ", ""], ["p", "mkP", "t"], ["s", "mkS", "ea"], ["w", "mkW", null], ["f", "mkF", "n"], ["l", "mkL", ""], ["min", "mkMin", ""]];
 function mkSaveUrl(){try{const u=new URL(location.href);for(const[k,id,d]of MKP){const v=$('#'+id).value.trim();if(v&&v!==d)u.searchParams.set(k,v);else u.searchParams.delete(k)}history.replaceState(null,'',u)}catch{}}
 let MK=null,mkShown=50,mkCur=[],mkKey=null,mkQT=0;const mkOpen=new Set();
 const FMT_LABEL={commander:'Commander',duel:'Duel Commander',modern:'Modern',legacy:'Legacy',vintage:'Vintage',pauper:'Pauper',pioneer:'Pioneer',standard:'Standard'};
@@ -511,7 +533,8 @@ const ctLink=(id,n)=>'<a class="ex" href="https://www.cardtrader.com/cards/'+(+i
 const mkUrl=r=>!r[5]?'https://www.cardmarket.com/en/Magic/Products/Search?searchString='+encodeURIComponent(r[1]):/^https:\/\//.test(r[5])?r[5]:MK.cmPrefix+r[5];
 async function mkInit(){
   if(!SRV)return;
-  try{const q=await fetch('data/market.json',{cache:'no-cache'});if(!q.ok)return;MK=await q.json()}catch{return}
+  try{const q=await fetch(DATA()+'market.json',{cache:'no-cache'});if(!q.ok)return;MK=await q.json()}catch{return}
+  {const v=MK.game&&MK.game.variants;if(v){const o=$('#mkF').options;o[0].textContent=v[0];o[1].textContent=v[1]}}
   if(!MK||!Array.isArray(MK.cards))return;
   MK.q=MK.cards.map(r=>(r[1]+' '+r[2]+' '+(MK.sets[r[2]]||'')).toLowerCase());
   const sel=$('#mkL'),cur=sel.value;sel.replaceChildren(...[['','Qualsiasi formato'],...MK.formats.map(f=>[f,FMT_LABEL[f]||f])].map(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;return o}));sel.value=cur||'';
@@ -563,7 +586,7 @@ function renderMk(){
 }
 async function mkSparks(k){
   if(!SRV)return;const els=[...document.querySelectorAll('#mkList [data-sp],#mkList [data-big]')],by=new Map();
-  for(const el of els){const id=el.dataset.sp||el.dataset.big;if(!/^[0-9a-f-]{36}$/.test(id))continue;const sh=id.slice(0,2);if(!by.has(sh))by.set(sh,[]);by.get(sh).push(el)}
+  for(const el of els){const id=el.dataset.sp||el.dataset.big;const sh=shKey(id);if(!sh)continue;if(!by.has(sh))by.set(sh,[]);by.get(sh).push(el)}
   await Promise.all([...by].map(async([sh,l])=>{const d=await shard(sh);for(const el of l){const v=d[el.dataset.sp||el.dataset.big];if(!el.isConnected)continue;if(!v){if(el.dataset.big)el.innerHTML=bigChart([]);continue}
     const arr=decS(v[k],SRV.days.length),ser=SRV.days.map((day,i)=>[day,arr[i]==null?null:arr[i]/100]).filter(e=>e[1]!=null);el.innerHTML=el.dataset.big?bigChart(ser):spark(ser)}}));
 }
@@ -576,8 +599,8 @@ $('#mkList').addEventListener('click',async e=>{
   if(e.target.closest('[data-share]')){const btn=e.target.closest('[data-share]');try{await navigator.clipboard.writeText(location.href);btn.textContent='Link copiato'}catch{btn.textContent='Copia l\'indirizzo dalla barra del browser'}setTimeout(()=>{if(btn.isConnected)btn.textContent='Copia il link di questa ricerca'},2500);return}
   const b=e.target.closest('[data-follow]');if(!b||!live)return;
   const x=mkCur[+b.dataset.follow];if(!x)return;const r=x.r,foil=$('#mkF').value==='f';
-  if(D.cards.some(c=>c.id===r[0]&&c.foil===foil))return;
-  const c={id:r[0],name:r[1],set:r[2],setName:MK.sets[r[2]]||'',cn:r[3],foil,qty:1,cm:mkUrl(r),h:{},manual:true};
+  if(D.cards.some(c=>c.id===r[0]&&c.foil===foil&&gameOf(c)===GAME))return;
+  const c={id:r[0],name:r[1],set:r[2],setName:MK.sets[r[2]]||'',cn:r[3],foil,qty:1,cm:mkUrl(r),h:{},manual:true};if(GAME!=='mtg')c.game=GAME;
   D.cards.push(c);await srvSync([c]);await save();render();renderMk();say(r[1]+' seguita.');
 });
 async function alertMovers(){
