@@ -207,7 +207,11 @@ def read_cardtrader(token, cards):
         return {}
     wanted = {st.lower() for st, _, n, f in cards.values() if max(n or 0, f or 0) >= CT_MIN}
     exps = [e for e in exps if e.get("game_id") == 1 and (e.get("code") or "").lower() in wanted]
-    out, skipped, done = {}, 0, 0
+    cm2sid = {}
+    for sid, (_, cmid, _, _) in cards.items():
+        if cmid:
+            cm2sid.setdefault(cmid, sid)
+    out, skipped, done, via_cm = {}, 0, 0, 0
     for e in exps:
         if time.time() - t0 > CT_BUDGET:
             print(f"CardTrader: tempo finito dopo {done} espansioni su {len(exps)}.")
@@ -219,15 +223,24 @@ def read_cardtrader(token, cards):
             print("CardTrader, espansione saltata:", e.get("code"), err)
             continue
         done += 1
-        bp = {b["id"]: b for b in bps if b.get("scryfall_id")}
+        bp = {b["id"]: b for b in bps}
         for bid, lst in prods.items():
             b = bp.get(int(bid))
-            if not b or b["scryfall_id"] not in cards:
+            if not b:
                 continue
-            sid = b["scryfall_id"]
-            st, cmid, tn, tf = cards[sid]
             cmids = b.get("card_market_ids") or []
+            sid = b.get("scryfall_id")
+            if sid not in cards:   # molte versioni speciali hanno solo il codice Cardmarket: si collega con quello
+                sid = next((cm2sid[c] for c in cmids if c in cm2sid), None)
+                if not sid:
+                    continue
+                via_cm += 1
+            st, cmid, tn, tf = cards[sid]
             if cmid and cmids and cmid not in cmids:   # carta diversa con lo stesso id Scryfall: meglio niente
+                skipped += 1
+                continue
+            if sid in out:   # due versioni di CardTrader sulla stessa carta: non si sa quale sia, meglio niente
+                out.pop(sid)
                 skipped += 1
                 continue
             rec = {"ct": b["id"]}
@@ -250,7 +263,7 @@ def read_cardtrader(token, cards):
                 rec[key], rec[key + "n"] = v, len(ok)
             if "x" in rec or "y" in rec:
                 out[sid] = rec
-    print(f"CardTrader: {done} espansioni in {time.time() - t0:.0f} s, prezzo EX+ per {len(out)} edizioni, {skipped} scartate.")
+    print(f"CardTrader: {done} espansioni in {time.time() - t0:.0f} s, prezzo EX+ per {len(out)} edizioni ({via_cm} collegate col codice Cardmarket), {skipped} scartate.")
     return out
 
 
