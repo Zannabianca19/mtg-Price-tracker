@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +35,15 @@ jobs:
       - name: Aggiorna l'archivio dei prezzi
         env:
           CARDTRADER_TOKEN: ${{ secrets.CARDTRADER_TOKEN }}
-        run: python "mtg-price-tracker github/scripts/build.py" --game mtg --out _site/data --prev "${{ steps.pages.outputs.base_url }}/data"
+          PREV: ${{ steps.pages.outputs.base_url }}/data
+        run: |
+          B="mtg-price-tracker github/scripts/build.py"
+          # Ogni gioco per conto suo: se l'aggiornamento di un gioco non riesce, si ripubblicano i suoi dati di ieri
+          # e gli altri giochi vanno avanti. Magic è indispensabile: se mancano anche i dati di ieri, si ferma tutto.
+          python "$B" --game mtg --out _site/data --prev "$PREV" || python "$B" --game mtg --restore --out _site/data --prev "$PREV"
+          for g in op; do
+            python "$B" --game $g --out _site/data --prev "$PREV" || python "$B" --game $g --restore --out _site/data --prev "$PREV" || echo "::warning::$g: nessun dato oggi"
+          done
 
       - name: Copia il sito
         run: cp -r "mtg-price-tracker github/site/." _site/
