@@ -51,6 +51,12 @@ a{color:var(--blue)}
 .tb nav a{color:var(--matMute);text-decoration:none;font-weight:600;font-size:15px}
 .tb nav a:hover{color:var(--matInk)}
 .lang{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--matMute)}
+.inst{margin-left:auto;min-height:36px;padding:0 12px;font-size:14px;background:var(--tag);color:#1a1c20;border-color:var(--tag)}
+.inst+.lang{margin-left:0}
+.howinst{background:#0b2537;color:var(--matInk);border-bottom:1px solid #ffffff14}
+.howinst .wrap{padding-block:16px;max-width:760px;margin-left:max(0px,calc((100% - 1240px)/2))}
+.howinst p{margin:0 0 8px}.howinst .msg{color:var(--matMute)}
+.howinst button{min-height:36px;background:#ffffff12;color:var(--matInk);border-color:#ffffff2a}
 .lang select{width:auto;min-height:36px;background:#ffffff12;color:var(--matInk);border-color:#ffffff2a}
 .lang select option{color:#1a1c20}
 
@@ -160,7 +166,7 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
 #pv{position:fixed;z-index:20;pointer-events:none;width:250px;aspect-ratio:488/680;border-radius:4.75%/3.4%;background:var(--soft) center/cover no-repeat;box-shadow:0 12px 32px #0006;display:none}
 #pv.on{display:block}#pv.load::after{content:attr(data-load);position:absolute;inset:auto 0 45% 0;text-align:center;font-size:14px;color:var(--mute)}
 
-@media(max-width:820px){.hg{grid-template-columns:1fr;gap:20px}.fan{height:290px}.pc{width:130px}.tb nav{display:none}.lang{margin-left:auto}.pc{width:106px}.pc:nth-child(1){--x:-72%}.pc:nth-child(3){--x:72%}.tag{font-size:13px;right:-4px;padding:4px 7px}.tag small{font-size:11px}.pc:nth-child(1) .tag{left:-4px}}
+@media(max-width:820px){.inst+.lang{margin-left:auto}.tb{gap:10px 16px;padding-block:8px}.hg{grid-template-columns:1fr;gap:20px}.fan{height:290px}.pc{width:130px}.tb nav{display:none}.lang{margin-left:auto}.pc{width:106px}.pc:nth-child(1){--x:-72%}.pc:nth-child(3){--x:72%}.tag{font-size:13px;right:-4px;padding:4px 7px}.tag small{font-size:11px}.pc:nth-child(1) .tag{left:-4px}}
 @media(max-width:600px){.stack tr.det td{padding-inline-start:0}.stack tr.det td::before{display:none}.day{grid-template-columns:4.2em minmax(0,1fr) 5em 4.2em 5em;gap:5px}.eu{display:inline;margin-inline-start:6px}table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute)}.stack td:empty{display:none}.stack td.name{padding-inline-start:0}.stack td.name::before{display:none}}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
@@ -169,8 +175,16 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
 <header class="topbar"><div class="wrap tb">
   <a class="brand" href="#top" id="top"><svg viewBox="0 0 22 28" aria-hidden="true"><rect x="1" y="1" width="20" height="26" rx="2.5" fill="none" stroke="#f7d046" stroke-width="2"/><path d="M5 19l4.5-5 3.5 2.6L17 11" fill="none" stroke="#f7d046" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardmarket Price Tracker</a>
   <nav><a href="#mk">All cards</a><a href="#mine">Your list</a><a href="#how-it-works">How it works</a></nav>
+  <button class="inst" id="bInst" hidden>Install the app</button>
   <label class="lang">Language <select id="selLang"></select></label>
 </div></header>
+<div class="howinst" id="howInst" hidden role="dialog" aria-labelledby="hiT"><div class="wrap">
+  <p><strong id="hiT">Put the site on your phone's home screen</strong></p>
+  <p id="hiIos">On iPhone, in Safari: tap the Share button (the square with the arrow pointing up), then «Add to Home Screen».</p>
+  <p id="hiAnd">On Android, in Chrome: tap the menu ⋮ at the top right, then «Install app» or «Add to Home screen».</p>
+  <p class="msg">The app opens full screen, like the others on your phone. The cards you follow stay in the browser where you added them: use «Save a backup» and «Load a backup» to move them.</p>
+  <button id="bInstX">Close</button>
+</div></div>
 <div class="hero"><div class="wrap hg">
   <div>
     <h1>What every Magic card is worth on Cardmarket today <span id="demo" class="sample" hidden>Sample data</span></h1>
@@ -311,6 +325,7 @@ RECS.push(...[["Quanto vale oggi ogni carta Magic su Cardmarket", "What every Ma
 RECS.push(...[["offerte EX+", "EX+ offers", "offres EX+", "ofertas EX+", "EX+-Angebote"], ["Apri Cardmarket con le sole offerte in condizione Excellent o migliore (serve l'accesso a Cardmarket)", "Open Cardmarket showing only offers in Excellent condition or better (you need to be logged in to Cardmarket)", "Ouvrir Cardmarket avec seulement les offres en état Excellent ou mieux (connexion à Cardmarket requise)", "Abrir Cardmarket solo con ofertas en estado Excellent o mejor (hay que iniciar sesión en Cardmarket)", "Cardmarket nur mit Angeboten in Excellent oder besser öffnen (Anmeldung bei Cardmarket nötig)"]]);
 RECS.push(...[["Tendenza Cardmarket", "Cardmarket trend", "Tendance Cardmarket", "Tendencia de Cardmarket", "Cardmarket-Trend"], ["Media vendite 7 giorni", "7-day sales average", "Moyenne des ventes sur 7 jours", "Media de ventas de 7 días", "Verkaufsdurchschnitt 7 Tage"], [". Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.", ". Prices: average of the sales over the last 7 days, from Cardmarket's public price guide.", ". Prix : moyenne des ventes des 7 derniers jours, d'après le guide des prix public de Cardmarket.", ". Precios: media de las ventas de los últimos 7 días, de la guía de precios pública de Cardmarket.", ". Preise: Durchschnitt der Verkäufe der letzten 7 Tage, aus dem öffentlichen Preisführer von Cardmarket."]]);
 RECS.push(...[["Il grafico compare dal secondo giorno registrato.", "The chart appears from the second recorded day.", "Le graphique apparaît à partir du deuxième jour enregistré.", "El gráfico aparece desde el segundo día registrado.", "Das Diagramm erscheint ab dem zweiten gespeicherten Tag."], ["Mostra il grafico", "Show the chart", "Afficher le graphique", "Mostrar el gráfico", "Diagramm anzeigen"], ["oppure di almeno €", "or by at least €", "ou d'au moins €", "o de al menos €", "oder um mindestens €"], ["Sotto 1 € l'avviso in percentuale non scatta mai, così le carte da pochi centesimi non ti riempiono di avvisi.", "Moves of less than €1 never trigger the percentage alert, so cheap cards don't flood you with alerts.", "En dessous de 1 €, l'alerte en pourcentage ne se déclenche jamais : les cartes à quelques centimes ne vous inondent pas d'alertes.", "Por debajo de 1 € el aviso en porcentaje nunca salta, así las cartas de pocos céntimos no te llenan de avisos.", "Unter 1 € löst die Prozent-Benachrichtigung nie aus, damit Karten für ein paar Cent dich nicht überfluten."], ["Copia il link di questa ricerca", "Copy the link to this search", "Copier le lien de cette recherche", "Copiar el enlace de esta búsqueda", "Link zu dieser Suche kopieren"], ["Link copiato", "Link copied", "Lien copié", "Enlace copiado", "Link kopiert"], ["Copia l'indirizzo dalla barra del browser", "Copy the address from the browser bar", "Copiez l'adresse dans la barre du navigateur", "Copia la dirección de la barra del navegador", "Kopiere die Adresse aus der Browserleiste"]]);
+RECS.push(...[["Installa l'app", "Install the app", "Installer l'app", "Instalar la app", "App installieren"], ["Metti il sito nella schermata Home del telefono", "Put the site on your phone's home screen", "Mettez le site sur l'écran d'accueil de votre téléphone", "Pon el sitio en la pantalla de inicio del teléfono", "Leg die Seite auf den Startbildschirm deines Handys"], ["Su iPhone, in Safari: tocca il pulsante Condividi (il quadrato con la freccia verso l'alto), poi «Aggiungi alla schermata Home».", "On iPhone, in Safari: tap the Share button (the square with the arrow pointing up), then «Add to Home Screen».", "Sur iPhone, dans Safari : touchez le bouton Partager (le carré avec la flèche vers le haut), puis «Sur l'écran d'accueil».", "En iPhone, en Safari: toca el botón Compartir (el cuadrado con la flecha hacia arriba) y luego «Añadir a pantalla de inicio».", "Auf dem iPhone in Safari: Tippe auf Teilen (das Quadrat mit dem Pfeil nach oben), dann «Zum Home-Bildschirm»."], ["Su Android, in Chrome: tocca il menu ⋮ in alto a destra, poi «Installa app» o «Aggiungi a schermata Home».", "On Android, in Chrome: tap the menu ⋮ at the top right, then «Install app» or «Add to Home screen».", "Sur Android, dans Chrome : touchez le menu ⋮ en haut à droite, puis «Installer l'application» ou «Ajouter à l'écran d'accueil».", "En Android, en Chrome: toca el menú ⋮ arriba a la derecha y luego «Instalar aplicación» o «Añadir a pantalla de inicio».", "Auf Android in Chrome: Tippe oben rechts auf das Menü ⋮, dann «App installieren» oder «Zum Startbildschirm hinzufügen»."], ["L'app si apre a tutto schermo, come le altre del telefono. Le carte che segui restano nel browser in cui le hai aggiunte: per spostarle usa «Salva una copia dei dati» e «Carica una copia».", "The app opens full screen, like the others on your phone. The cards you follow stay in the browser where you added them: use «Save a backup» and «Load a backup» to move them.", "L'app s'ouvre en plein écran, comme les autres de votre téléphone. Les cartes suivies restent dans le navigateur où vous les avez ajoutées : utilisez «Enregistrer une copie» et «Charger une copie» pour les déplacer.", "La app se abre a pantalla completa, como las demás del teléfono. Las cartas que sigues se quedan en el navegador donde las añadiste: usa «Guardar una copia» y «Cargar una copia» para moverlas.", "Die App öffnet sich im Vollbild wie die anderen auf deinem Handy. Deine Karten bleiben im Browser, in dem du sie hinzugefügt hast: Nutze «Sicherung speichern» und «Sicherung laden», um sie zu übertragen."], ["Chiudi", "Close", "Fermer", "Cerrar", "Schließen"]]);
 const DICT={};for(const r of RECS){DICT[r[1]]=DICT[r[1]]||r;DICT[r[0]]=r}
 const ITK=RECS.map(r=>r[0]);
 let LANG='en';try{const l=localStorage.getItem('pc-lang');if(LANGS[l])LANG=l}catch{}
@@ -462,6 +477,21 @@ async function update(manual){
     await alertMovers();
   }catch(e){say('Aggiornamento non riuscito: '+e.message)}
   busy=false;$('#bUpd').disabled=false;
+}
+
+/* ---------- installa come app ---------- */
+{
+  let ev=null;const b=$('#bInst'),box=$('#howInst');
+  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const mobile=ios||/Android|Mobile/.test(navigator.userAgent);
+  const show=()=>{b.hidden=standalone()||!(ev||mobile)};
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;show()});
+  addEventListener('appinstalled',()=>{ev=null;b.hidden=true;box.hidden=true});
+  b.onclick=async()=>{if(ev){ev.prompt();try{await ev.userChoice}catch{}ev=null;show();return}
+    $('#hiIos').hidden=!ios&&mobile;$('#hiAnd').hidden=ios;box.hidden=!box.hidden;if(!box.hidden)box.scrollIntoView({block:'nearest'})};
+  $('#bInstX').onclick=()=>{box.hidden=true};
+  show();
 }
 /* ---------- tutte le carte (data/market.json) ---------- */
 const MKP=[["q", "mkQ", ""], ["p", "mkP", "t"], ["s", "mkS", "ea"], ["w", "mkW", null], ["f", "mkF", "n"], ["l", "mkL", ""], ["min", "mkMin", ""]];
