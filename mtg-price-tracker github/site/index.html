@@ -497,7 +497,7 @@ function renderMk(){
   if(!rows.length){$('#mkList').innerHTML='<div class="empty">Nessuna carta per questi filtri.</div>';return}
   const have=new Set(D.cards.map(c=>c.id+(c.foil?'|f':'')));
   const ch=(r,k)=>{const l=r[o],b=r[o+k];if(l==null||!b)return'<td class="flat">—</td>';const d=(l-b)/100,p=(l-b)/b*100;return'<td class="'+cls(p)+'">'+vc(p,d)+'</td>'};
-  $('#mkList').innerHTML='<p class="count">'+rows.length.toLocaleString(LOC())+' carte'+(avg?'. Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.':'')+'</p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
+  $('#mkList').innerHTML='<p class="count">'+rows.length.toLocaleString(LOC())+' carte'+(avg?'<span>. Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.</span>':'')+'</p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
     rows.slice(0,mkShown).map((x,i)=>{const r=x.r;
       return'<tr><td class="name"><a href="'+esc(mkUrl(r))+'" target="_blank" rel="noopener" data-pv="'+esc(r[0])+'">'+esc(r[1])+'</a>'+(foil?' <span class="foil">foil</span>':'')+'<small><span class="set">'+esc(r[2])+'</span>'+esc(MK.sets[r[2]]||'')+' #'+esc(r[3])+exLink(mkUrl(r))+'</small></td><td>'+esc(eur(x.last/100))+'</td>'+ch(r,1)+ch(r,2)+ch(r,3)+
       '<td><span class="spw" data-sp="'+esc(r[0])+'"><svg class="sp" aria-hidden="true"></svg></span></td><td>'+
