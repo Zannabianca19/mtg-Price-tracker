@@ -205,8 +205,10 @@ def read_cardtrader(token, cards):
     except Exception as e:
         print("CardTrader non disponibile oggi:", e)
         return {}
+    # Tutte le espansioni Magic: su CardTrader le versioni speciali (borderless, showcase...) stanno spesso
+    # in espansioni a parte con un codice diverso da Scryfall. Prima quelle con lo stesso codice delle carte care.
     wanted = {st.lower() for st, _, n, f in cards.values() if max(n or 0, f or 0) >= CT_MIN}
-    exps = [e for e in exps if e.get("game_id") == 1 and (e.get("code") or "").lower() in wanted]
+    exps = sorted((e for e in exps if e.get("game_id") == 1), key=lambda e: (e.get("code") or "").lower() not in wanted)
     cm2sid = {}
     for sid, (_, cmid, _, _) in cards.items():
         if cmid:
