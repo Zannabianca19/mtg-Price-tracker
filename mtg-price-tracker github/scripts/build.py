@@ -6,6 +6,7 @@ Ogni giorno:
   2. scarica il bulk "default_cards" di Scryfall e prende i prezzi EUR e EUR foil di ogni edizione;
   3. aggiunge il giorno, tiene gli ultimi DAYS_KEEP giorni e riscrive i 256 file;
   4. calcola le classifiche di chi sale e chi scende (1, 7, 30 giorni) in movers.json;
+  4b. aggiunge la media vendite a 7 giorni dal listino pubblico di Cardmarket (price guide);
   5. scrive market.json: tutte le carte da almeno 1 € con prezzo e prezzi di 1, 7 e 30 giorni prima,
      per la pagina iniziale del sito.
 
@@ -21,6 +22,10 @@ MIN_CENTS = 100          # classifiche solo per carte da almeno 1 € (prima e d
 TOP = 300                # voci per classifica
 MARKET_MIN = 100         # elenco "tutte le carte" (market.json): edizioni da almeno 1 €, normale o foil
 CM_PREFIX = "https://www.cardmarket.com/en/Magic/Products"
+PRICE_GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json"
+# Serie salvate per ogni edizione: e/f = prezzo di tendenza normale/foil (Scryfall),
+# s/t = media delle vendite a 7 giorni normale/foil (listino pubblico di Cardmarket).
+SERIES = ("e", "f", "s", "t")
 FORMATS = ["commander", "duel", "modern", "legacy", "vintage", "pauper", "pioneer", "standard"]
 HEAD = {"User-Agent": "CardmarketPriceArchive/1.0 (GitHub Actions; daily, once a day)", "Accept": "application/json"}
 SHARDS = [f"{i:02x}" for i in range(256)]
@@ -77,7 +82,7 @@ def read_prev(prev):
         except (urllib.error.HTTPError, FileNotFoundError):
             data = load(f"h/{sh}.json")
         for cid, v in data.items():
-            hist[cid] = (dec(v.get("e", ""), len(days)), dec(v.get("f", ""), len(days)))
+            hist[cid] = {k: dec(v.get(k, ""), len(days)) for k in SERIES}
     print(f"Storico precedente: {len(days)} giorni, {len(hist)} carte.")
     return days, hist
 
@@ -133,7 +138,7 @@ def read_bulk(path):
             if e is None and fo is None:
                 continue
             cid = c["id"]
-            cur[cid] = (e, fo)
+            cur[cid] = {"e": e, "f": fo, "cm": c.get("cardmarket_id")}
             lg = c.get("legalities") or {}
             mask = sum(1 << i for i, fm in enumerate(FORMATS) if lg.get(fm) == "legal")
             cm = (c.get("purchase_uris") or {}).get("cardmarket", "")
@@ -145,6 +150,19 @@ def read_bulk(path):
                          c.get("collector_number", ""), mask, cm]
     print(f"Bulk letto: {len(cur)} edizioni con prezzo EUR.")
     return cur, info
+
+
+def read_price_guide():
+    """Media vendite 7 giorni per idProduct, in centesimi. Se il listino non si scarica, si va avanti senza."""
+    try:
+        pg = json.loads(http(PRICE_GUIDE))
+        out = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")))
+               for it in pg.get("priceGuides", []) if it.get("idProduct")}
+        print(f"Listino Cardmarket del {pg.get('createdAt')}: {len(out)} prodotti.")
+        return out
+    except Exception as e:  # il listino è un extra: senza, l'archivio resta valido
+        print("Listino Cardmarket non disponibile oggi:", e)
+        return {}
 
 
 def latest_bulk():
@@ -166,6 +184,7 @@ def main():
     ap.add_argument("--prev", default="")
     ap.add_argument("--bulk", default="")
     ap.add_argument("--today", default="")
+    ap.add_argument("--guide", default="", help="listino Cardmarket locale (prove)")
     a = ap.parse_args()
     today = a.today or datetime.datetime.now(datetime.timezone.utc).date().isoformat()
 
@@ -173,6 +192,16 @@ def main():
     cur, info = read_bulk(a.bulk or latest_bulk())
     if len(cur) < 1000 and not a.bulk:
         sys.exit("Troppo pochi prezzi nel bulk: qualcosa non va, non pubblico.")
+    pg = {} if a.bulk else read_price_guide()
+    if a.guide:
+        with open(a.guide, encoding="utf-8") as f:
+            pg = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil"))) for it in json.load(f)["priceGuides"]}
+    linked = 0
+    for cid, c in cur.items():
+        s7, t7 = pg.get(c.pop("cm", None), (None, None))
+        c["s"], c["t"] = s7, t7
+        linked += s7 is not None or t7 is not None
+    print(f"Media vendite 7 giorni collegata a {linked} edizioni.")
 
     days = [d for d in old_days if d != today and d < today] + [today]
     days = days[-DAYS_KEEP:]
@@ -201,26 +230,25 @@ def main():
     market, set_names = [], {}
     ids = set(hist) | set(cur)
     for cid in ids:
-        oe, of = hist.get(cid, ([], []))
-        ne, nf = [], []
-        for d in days[:-1]:
-            i = idx_old.get(d)
-            ne.append(oe[i] if i is not None and i < len(oe) else None)
-            nf.append(of[i] if i is not None and i < len(of) else None)
-        te, tf = cur.get(cid, (None, None))
-        ne.append(te)
-        nf.append(tf)
+        old, now, ser = hist.get(cid, {}), cur.get(cid, {}), {}
+        for k in SERIES:
+            o = old.get(k, [])
+            arr = [o[i] if i is not None and i < len(o) else None for i in (idx_old.get(d) for d in days[:-1])]
+            arr.append(now.get(k))
+            ser[k] = arr
+        ne, nf = ser["e"], ser["f"]
         if all(v is None for v in ne) and all(v is None for v in nf):
             continue
         rec = {"e": enc(ne)}
-        if any(v is not None for v in nf):
-            rec["f"] = enc(nf)
+        for k in SERIES[1:]:
+            if any(v is not None for v in ser[k]):
+                rec[k] = enc(ser[k])
         shard_data[cid[:2]][cid] = rec
         if cid in info and max(ne[-1] or 0, nf[-1] or 0) >= MARKET_MIN:
             nm, st, sn, cn, mask, cm = info[cid]
             set_names[st] = sn
             row = [cid, nm, st, cn, mask, cm[len(CM_PREFIX):] if cm.startswith(CM_PREFIX) else cm]
-            for arr in (ne, nf):
+            for arr in (ne, nf, ser["s"], ser["t"]):
                 row.append(arr[-1])
                 row.extend(arr[bases[w]] if bases[w] is not None else None for w in (1, 7, 30))
             market.append(row)
@@ -243,14 +271,14 @@ def main():
             json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
         short = {}
         for cid, rec in data.items():
-            e = dec(rec["e"], len(days))[cut:]
-            fo = dec(rec.get("f", ""), len(days))[cut:]
-            if all(v is None for v in e) and all(v is None for v in fo):
-                continue
-            sr = {"e": enc(e)}
-            if any(v is not None for v in fo):
-                sr["f"] = enc(fo)
-            short[cid] = sr
+            sr = {}
+            for k in SERIES:
+                v = dec(rec.get(k, ""), len(days))[cut:]
+                if any(x is not None for x in v):
+                    sr[k] = enc(v)
+            if "e" in sr or "f" in sr:
+                sr.setdefault("e", "")
+                short[cid] = sr
         with open(os.path.join(a.out, "h", f"{sh}.json"), "w", encoding="utf-8") as f:
             json.dump(short, f, separators=(",", ":"), ensure_ascii=False)
 
@@ -268,7 +296,9 @@ def main():
     with open(os.path.join(a.out, "market.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": today, "formats": FORMATS, "cmPrefix": CM_PREFIX, "sets": set_names,
                    "fields": ["id", "name", "set", "cn", "legal", "cm", "price", "base1", "base7", "base30",
-                              "foil", "foilBase1", "foilBase7", "foilBase30"], "cards": market},
+                              "foil", "foilBase1", "foilBase7", "foilBase30",
+                              "sales7", "sales7Base1", "sales7Base7", "sales7Base30",
+                              "foilSales7", "foilSales7Base1", "foilSales7Base7", "foilSales7Base30"], "cards": market},
                   f, separators=(",", ":"), ensure_ascii=False)
     print(f"market.json: {len(market)} carte da almeno {MARKET_MIN / 100:.0f} €")
     n_cards = sum(len(d) for d in shard_data.values())

@@ -86,7 +86,7 @@ button:disabled{opacity:.5;cursor:default}
 input,select,textarea{font:16px Archivo,sans-serif;min-height:42px;padding:8px 11px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:100%}
 textarea{min-height:150px;resize:vertical}
 .ctrl{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) minmax(0,.6fr) minmax(0,.6fr) minmax(0,1.2fr);gap:10px;margin-bottom:16px}
-.ctrl.eq{grid-template-columns:repeat(5,minmax(0,1fr))}.ctrl.eq.six{grid-template-columns:minmax(0,1.5fr) minmax(0,1.5fr) repeat(4,minmax(0,1fr))}
+.ctrl.eq{grid-template-columns:repeat(5,minmax(0,1fr))}.ctrl.eq.six{grid-template-columns:minmax(0,1.4fr) minmax(0,1.4fr) repeat(5,minmax(0,1fr))}
 .ctrl label{display:grid;gap:4px;font-size:13px;color:var(--mute);font-weight:600}
 @media(max-width:900px){.ctrl,.ctrl.eq,.ctrl.eq.six{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .more{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
@@ -175,6 +175,7 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
     <div class="ctrl eq six">
       <label>Search<input id="mkQ" type="search" placeholder="Card or set name, e.g. Sol Ring" autocomplete="off"></label>
       <label>Sort by<select id="mkS"><option value="ea">Biggest movers in euros</option><option value="eu">Biggest rise in euros</option><option value="ed">Biggest drop in euros</option><option value="pu">Biggest rise in %</option><option value="pd">Biggest drop in %</option><option value="pr">Highest price</option><option value="nm">Name A to Z</option></select></label>
+      <label>Price<select id="mkP"><option value="t">Cardmarket trend</option><option value="a">7-day sales average</option></select></label>
       <label>Period<select id="mkW"><option value="1">1 day</option><option value="7">7 days</option><option value="30">30 days</option></select></label>
       <label>Version<select id="mkF"><option value="n">Normal</option><option value="f">Foil</option></select></label>
       <label>Legal in<select id="mkL"></select></label>
@@ -295,6 +296,7 @@ RECS.push(...[["Più mosse in euro · 1 giorno","Biggest movers in euros · 1 da
 RECS.push(...[["Tutte le carte da almeno 1 € su Cardmarket e quanto si è mosso il loro prezzo. Cerca, filtra e ordina come vuoi; premi «Segui» per mettere una carta nella tua lista. «offerte EX+» apre Cardmarket con le sole copie in condizione Excellent o migliore: serve aver fatto l'accesso a Cardmarket.", "Every card worth at least €1 on Cardmarket and how much its price has moved. Search, filter and sort as you like; press «Follow» to put a card in your list. «EX+ offers» opens Cardmarket with only the copies in Excellent condition or better: you need to be logged in to Cardmarket.", "Toutes les cartes à partir de 1 € sur Cardmarket et l'évolution de leur prix. Cherchez, filtrez et triez comme vous voulez ; appuyez sur «Suivre» pour ajouter une carte à votre liste. «offres EX+» ouvre Cardmarket avec seulement les exemplaires en état Excellent ou mieux : il faut être connecté à Cardmarket.", "Todas las cartas de al menos 1 € en Cardmarket y cuánto se ha movido su precio. Busca, filtra y ordena como quieras; pulsa «Seguir» para poner una carta en tu lista. «ofertas EX+» abre Cardmarket solo con las copias en estado Excellent o mejor: tienes que haber iniciado sesión en Cardmarket.", "Alle Karten ab 1 € auf Cardmarket und wie sich ihr Preis bewegt hat. Suche, filtere und sortiere, wie du willst; drücke «Folgen», um eine Karte in deine Liste aufzunehmen. «EX+-Angebote» öffnet Cardmarket nur mit Exemplaren in Excellent oder besser: Du musst bei Cardmarket angemeldet sein."], ["Nome della carta o dell'edizione, es. Sol Ring", "Card or set name, e.g. Sol Ring", "Nom de la carte ou de l'édition, ex. Sol Ring", "Nombre de la carta o de la edición, p. ej. Sol Ring", "Karten- oder Set-Name, z. B. Sol Ring"], ["Più mosse in euro", "Biggest movers in euros", "Plus forts mouvements en euros", "Más movidas en euros", "Stärkste Bewegung in Euro"], ["Aumento maggiore in euro", "Biggest rise in euros", "Plus forte hausse en euros", "Mayor subida en euros", "Größter Anstieg in Euro"], ["Calo maggiore in euro", "Biggest drop in euros", "Plus forte baisse en euros", "Mayor bajada en euros", "Größter Rückgang in Euro"], ["Rialzo maggiore in %", "Biggest rise in %", "Plus forte hausse en %", "Mayor subida en %", "Größter Anstieg in %"], ["Ribasso maggiore in %", "Biggest drop in %", "Plus forte baisse en %", "Mayor bajada en %", "Größter Rückgang in %"]]);
 RECS.push(...[["Quanto vale oggi ogni carta Magic su Cardmarket", "What every Magic card is worth on Cardmarket today", "Ce que vaut chaque carte Magic sur Cardmarket aujourd'hui", "Cuánto vale hoy cada carta de Magic en Cardmarket", "Was jede Magic-Karte heute auf Cardmarket wert ist"], ["Il prezzo di tendenza di oltre 40.000 edizioni, aggiornato ogni giorno, con quanto è salito o sceso. Segui le tue carte e i tuoi mazzi, gratis e senza account.", "The trend price of more than 40,000 printings, updated every day, with how much each one rose or fell. Follow your cards and decks for free, without an account.", "Le prix tendance de plus de 40 000 éditions, mis à jour chaque jour, avec sa hausse ou sa baisse. Suivez vos cartes et vos decks gratuitement, sans compte.", "El precio de tendencia de más de 40.000 ediciones, actualizado cada día, con cuánto ha subido o bajado. Sigue tus cartas y mazos gratis y sin cuenta.", "Der Trendpreis von über 40.000 Drucken, täglich aktualisiert, mit Anstieg oder Rückgang. Verfolge deine Karten und Decks kostenlos und ohne Konto."], ["Le tre carte che si sono mosse di più in euro nell'ultimo giorno", "The three cards that moved the most in euros over the last day", "Les trois cartes qui ont le plus bougé en euros sur le dernier jour", "Las tres cartas que más se han movido en euros en el último día", "Die drei Karten mit der größten Bewegung in Euro am letzten Tag"], ["Le carte più care oggi", "The most expensive cards today", "Les cartes les plus chères aujourd'hui", "Las cartas más caras hoy", "Die teuersten Karten heute"]]);
 RECS.push(...[["offerte EX+", "EX+ offers", "offres EX+", "ofertas EX+", "EX+-Angebote"], ["Apri Cardmarket con le sole offerte in condizione Excellent o migliore (serve l'accesso a Cardmarket)", "Open Cardmarket showing only offers in Excellent condition or better (you need to be logged in to Cardmarket)", "Ouvrir Cardmarket avec seulement les offres en état Excellent ou mieux (connexion à Cardmarket requise)", "Abrir Cardmarket solo con ofertas en estado Excellent o mejor (hay que iniciar sesión en Cardmarket)", "Cardmarket nur mit Angeboten in Excellent oder besser öffnen (Anmeldung bei Cardmarket nötig)"]]);
+RECS.push(...[["Tendenza Cardmarket", "Cardmarket trend", "Tendance Cardmarket", "Tendencia de Cardmarket", "Cardmarket-Trend"], ["Media vendite 7 giorni", "7-day sales average", "Moyenne des ventes sur 7 jours", "Media de ventas de 7 días", "Verkaufsdurchschnitt 7 Tage"], [". Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.", ". Prices: average of the sales over the last 7 days, from Cardmarket's public price guide.", ". Prix : moyenne des ventes des 7 derniers jours, d'après le guide des prix public de Cardmarket.", ". Precios: media de las ventas de los últimos 7 días, de la guía de precios pública de Cardmarket.", ". Preise: Durchschnitt der Verkäufe der letzten 7 Tage, aus dem öffentlichen Preisführer von Cardmarket."]]);
 const DICT={};for(const r of RECS){DICT[r[1]]=DICT[r[1]]||r;DICT[r[0]]=r}
 const ITK=RECS.map(r=>r[0]);
 let LANG='en';try{const l=localStorage.getItem('pc-lang');if(LANGS[l])LANG=l}catch{}
@@ -464,9 +466,9 @@ async function mkInit(){
   $('#mk').hidden=false;renderMk();renderHero();
 }
 function mkRows(){
-  const foil=$('#mkF').value==='f',o=foil?10:6,w=WI[$('#mkW').value]||1,s=$('#mkS').value;
+  const foil=$('#mkF').value==='f',avg=$('#mkP').value==='a',o=(avg?14:6)+(foil?4:0),w=WI[$('#mkW').value]||1,s=$('#mkS').value;
   const fi=MK.formats.indexOf($('#mkL').value),min=(parseFloat($('#mkMin').value)||0)*100,q=$('#mkQ').value.trim().toLowerCase();
-  const key=[foil,w,s,fi,min,q].join('|');if(key===mkKey)return mkCur;mkKey=key;
+  const key=[foil,avg,w,s,fi,min,q].join('|');if(key===mkKey)return mkCur;mkKey=key;
   const out=[];
   for(let i=0;i<MK.cards.length;i++){const r=MK.cards[i],last=r[o];if(last==null||last<min)continue;if(fi>=0&&!((r[4]>>fi)&1))continue;if(q&&!MK.q[i].includes(q))continue;
     const b=r[o+w],d=b?last-b:null;out.push({r,last,d,p:b?d/b*100:null})}
@@ -490,26 +492,26 @@ function renderHero(){
 }
 function renderMk(){
   if(!MK)return;
-  const foil=$('#mkF').value==='f',o=foil?10:6;
+  const foil=$('#mkF').value==='f',avg=$('#mkP').value==='a',o=(avg?14:6)+(foil?4:0);
   const rows=mkRows();
   if(!rows.length){$('#mkList').innerHTML='<div class="empty">Nessuna carta per questi filtri.</div>';return}
   const have=new Set(D.cards.map(c=>c.id+(c.foil?'|f':'')));
   const ch=(r,k)=>{const l=r[o],b=r[o+k];if(l==null||!b)return'<td class="flat">—</td>';const d=(l-b)/100,p=(l-b)/b*100;return'<td class="'+cls(p)+'">'+vc(p,d)+'</td>'};
-  $('#mkList').innerHTML='<p class="count">'+rows.length.toLocaleString(LOC())+' carte</p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
+  $('#mkList').innerHTML='<p class="count">'+rows.length.toLocaleString(LOC())+' carte'+(avg?'. Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.':'')+'</p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
     rows.slice(0,mkShown).map((x,i)=>{const r=x.r;
       return'<tr><td class="name"><a href="'+esc(mkUrl(r))+'" target="_blank" rel="noopener" data-pv="'+esc(r[0])+'">'+esc(r[1])+'</a>'+(foil?' <span class="foil">foil</span>':'')+'<small><span class="set">'+esc(r[2])+'</span>'+esc(MK.sets[r[2]]||'')+' #'+esc(r[3])+exLink(mkUrl(r))+'</small></td><td>'+esc(eur(x.last/100))+'</td>'+ch(r,1)+ch(r,2)+ch(r,3)+
       '<td><span class="spw" data-sp="'+esc(r[0])+'"><svg class="sp" aria-hidden="true"></svg></span></td><td>'+
       (have.has(r[0]+(foil?'|f':''))?'<span class="msg" style="color:var(--mute)">Già nella lista</span>':'<button class="x" data-follow="'+i+'">Segui</button>')+'</td></tr>'}).join('')+'</tbody></table></div>'+
     (rows.length>mkShown?'<div class="more"><button data-mkmore="1">Mostra altre 50 ('+(rows.length-mkShown).toLocaleString(LOC())+' rimaste)</button></div>':'');
-  mkSparks(foil);
+  mkSparks(avg?(foil?'t':'s'):(foil?'f':'e'));
 }
-async function mkSparks(foil){
+async function mkSparks(k){
   if(!SRV)return;const els=[...document.querySelectorAll('#mkList [data-sp]')],by=new Map();
   for(const el of els){const id=el.dataset.sp;if(!/^[0-9a-f-]{36}$/.test(id))continue;const sh=id.slice(0,2);if(!by.has(sh))by.set(sh,[]);by.get(sh).push(el)}
   await Promise.all([...by].map(async([sh,l])=>{const d=await shard(sh);for(const el of l){const v=d[el.dataset.sp];if(!v||!el.isConnected)continue;
-    const arr=decS(foil?v.f:v.e,SRV.days.length);el.innerHTML=spark(SRV.days.map((day,i)=>[day,arr[i]==null?null:arr[i]/100]).filter(e=>e[1]!=null))}}));
+    const arr=decS(v[k],SRV.days.length);el.innerHTML=spark(SRV.days.map((day,i)=>[day,arr[i]==null?null:arr[i]/100]).filter(e=>e[1]!=null))}}));
 }
-for(const id of ['mkW','mkS','mkF','mkL'])$('#'+id).addEventListener('change',()=>{mkShown=50;renderMk()});
+for(const id of ['mkP','mkW','mkS','mkF','mkL'])$('#'+id).addEventListener('change',()=>{mkShown=50;renderMk()});
 $('#mkMin').addEventListener('input',()=>{mkShown=50;clearTimeout(mkQT);mkQT=setTimeout(renderMk,250)});
 $('#mkQ').addEventListener('input',()=>{mkShown=50;clearTimeout(mkQT);mkQT=setTimeout(renderMk,250)});
 $('#mkList').addEventListener('click',async e=>{
