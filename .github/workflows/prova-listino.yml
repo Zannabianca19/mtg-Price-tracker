@@ -1,0 +1,57 @@
+name: Prova listino Cardmarket (temporaneo)
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/prova-listino.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prova:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Scarica e controlla
+        shell: python
+        run: |
+          import json, urllib.request, gzip, collections
+          H = {"User-Agent": "CardmarketPriceArchive/1.0 (GitHub Actions)"}
+          def get(u):
+              r = urllib.request.urlopen(urllib.request.Request(u, headers=H), timeout=300)
+              print("GET", u, r.status, r.headers.get("Content-Type"), r.headers.get("Content-Length"))
+              return r.read()
+          for u in ["https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json"]:
+              try:
+                  b = get(u)
+              except Exception as e:
+                  print("ERRORE", u, e); raise
+          pg = json.loads(b)
+          print("chiavi:", list(pg)[:10] if isinstance(pg, dict) else type(pg))
+          items = pg.get("priceGuides") if isinstance(pg, dict) else pg
+          print("data:", {k: v for k, v in pg.items() if k != "priceGuides"} if isinstance(pg, dict) else "")
+          print("prodotti:", len(items)); print("esempio:", json.dumps(items[:2]))
+          keys = collections.Counter(k for it in items for k in it)
+          print("campi:", dict(keys))
+          by = {it["idProduct"]: it for it in items}
+          # Scryfall
+          bl = json.loads(get("https://api.scryfall.com/bulk-data"))
+          item = next(i for i in bl["data"] if i["type"] == "default_cards")
+          url = item.get("jsonl_download_uri") or item["download_uri"]
+          raw = get(url)
+          if url.endswith(".gz"): raw = gzip.decompress(raw)
+          txt = raw.decode()
+          cards = [json.loads(l.rstrip(",")) for l in txt.splitlines() if l.strip() not in ("", "[", "]")] if not txt.lstrip().startswith("[") else json.loads(txt)
+          paper = [c for c in cards if "paper" in (c.get("games") or []) and (c.get("prices") or {}).get("eur")]
+          withid = [c for c in paper if c.get("cardmarket_id")]
+          match = [c for c in withid if c["cardmarket_id"] in by]
+          print(f"Scryfall con prezzo EUR: {len(paper)}, con cardmarket_id: {len(withid)}, presenti nel listino: {len(match)}")
+          lowex = [c for c in match if by[c["cardmarket_id"]].get("low-ex+") is not None]
+          print("con low-ex+:", len(lowex))
+          # confronto trend Scryfall vs listino
+          same = sum(1 for c in match if abs(float(c["prices"]["eur"]) - (by[c["cardmarket_id"]].get("trend") or -1)) < 0.011)
+          print("trend uguale a Scryfall:", same, "su", len(match))
+          for name, st in [("Taiga", "lea"), ("Sol Ring", "lea"), ("Rhystic Study", "pcy"), ("Snapcaster Mage", "sld")]:
+              for c in paper:
+                  if c["name"] == name and c["set"] == st:
+                      print(name, st, c.get("cardmarket_id"), c["prices"], json.dumps(by.get(c.get("cardmarket_id"))))
+                      break
