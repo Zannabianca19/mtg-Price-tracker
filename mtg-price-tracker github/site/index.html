@@ -14,6 +14,12 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='10' y='4' width='44' height='56' rx='5' fill='%230f3046'/%3E%3Cpath d='M17 42 27 31l8 6 12-15' stroke='%23f7d046' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Cardmarket Price Tracker for MTG", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any (web browser)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "description": "Free Cardmarket price tracker for MTG: follow trend prices of any card, foil and full art versions, whole sets and Commander or Duel Commander decks. Daily changes, alerts, 5 languages.", "inLanguage": ["en", "it", "fr", "es", "de"]}</script>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f3046">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Prezzi MTG">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <style>
@@ -95,7 +101,7 @@ label.chk{display:flex;gap:8px;align-items:center;min-height:42px}label.chk inpu
 
 /* listino */
 .sheet{background:var(--card);border:1px solid var(--line);border-radius:10px}
-.count{margin:0 0 8px;font-size:14px;color:var(--mute)}
+.count{margin:0 0 8px;font-size:14px;color:var(--mute);display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}.count .share{margin-left:auto}
 table{width:100%;border-collapse:collapse}
 th{font-size:13px;color:var(--mute);font-weight:600;text-align:right;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
 th:first-child{text-align:left}th[data-k]{cursor:pointer}th[data-k]:hover{color:var(--ink)}
@@ -111,6 +117,11 @@ td.name a.ex{display:inline-block;margin-left:10px;font-size:12px;font-weight:60
 td.name a.ex:hover{border-color:var(--blue);text-decoration:none}
 .up{color:var(--up);font-weight:700}.down{color:var(--down);font-weight:700}.flat{color:var(--mute)}
 svg.sp{width:96px;height:26px;display:inline-block;vertical-align:middle}
+svg.big{display:block;width:100%;max-width:720px;height:auto;margin:0 0 14px;font:12px Archivo,sans-serif;fill:var(--mute)}
+svg.big circle{cursor:default}
+button.spb{background:none;border:0;padding:2px;min-height:0;border-radius:4px;cursor:pointer}
+button.spb:hover{background:var(--soft)}
+button.spb[aria-expanded=true]{background:var(--soft);outline:1px solid var(--line)}
 td input.q{width:64px;min-height:34px;padding:4px 8px;text-align:right}
 button.x,button.dd{min-height:34px;padding:0 11px;font-size:14px}
 .empty{padding:40px 16px;text-align:center;color:var(--mute)}
@@ -238,6 +249,8 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
     </div></details>
     <details id="dSet"><summary>Alerts</summary><div class="pane">
       <label class="chk">Also alert me when a card moves by at least <input type="number" id="nThr" min="1" max="100" style="width:80px"> %</label>
+      <label class="chk">or by at least € <input type="number" id="nEur" min="0" step="1" placeholder="optional" style="width:110px"></label>
+      <span class="note">Moves of less than €1 never trigger the percentage alert, so cheap cards don't flood you with alerts.</span>
       <button id="bNotif">Turn on browser notifications</button>
       <span class="note">Alerts arrive as notifications after each update if the browser allows it; otherwise you read them at the top. You set each card's target price in the list: you get an alert on the day the price drops below it.</span>
     </div></details>
@@ -297,6 +310,7 @@ RECS.push(...[["Tutte le carte da almeno 1 € su Cardmarket e quanto si è moss
 RECS.push(...[["Quanto vale oggi ogni carta Magic su Cardmarket", "What every Magic card is worth on Cardmarket today", "Ce que vaut chaque carte Magic sur Cardmarket aujourd'hui", "Cuánto vale hoy cada carta de Magic en Cardmarket", "Was jede Magic-Karte heute auf Cardmarket wert ist"], ["Il prezzo di tendenza di oltre 40.000 edizioni, aggiornato ogni giorno, con quanto è salito o sceso. Segui le tue carte e i tuoi mazzi, gratis e senza account.", "The trend price of more than 40,000 printings, updated every day, with how much each one rose or fell. Follow your cards and decks for free, without an account.", "Le prix tendance de plus de 40 000 éditions, mis à jour chaque jour, avec sa hausse ou sa baisse. Suivez vos cartes et vos decks gratuitement, sans compte.", "El precio de tendencia de más de 40.000 ediciones, actualizado cada día, con cuánto ha subido o bajado. Sigue tus cartas y mazos gratis y sin cuenta.", "Der Trendpreis von über 40.000 Drucken, täglich aktualisiert, mit Anstieg oder Rückgang. Verfolge deine Karten und Decks kostenlos und ohne Konto."], ["Le tre carte che si sono mosse di più in euro nell'ultimo giorno", "The three cards that moved the most in euros over the last day", "Les trois cartes qui ont le plus bougé en euros sur le dernier jour", "Las tres cartas que más se han movido en euros en el último día", "Die drei Karten mit der größten Bewegung in Euro am letzten Tag"], ["Le carte più care oggi", "The most expensive cards today", "Les cartes les plus chères aujourd'hui", "Las cartas más caras hoy", "Die teuersten Karten heute"]]);
 RECS.push(...[["offerte EX+", "EX+ offers", "offres EX+", "ofertas EX+", "EX+-Angebote"], ["Apri Cardmarket con le sole offerte in condizione Excellent o migliore (serve l'accesso a Cardmarket)", "Open Cardmarket showing only offers in Excellent condition or better (you need to be logged in to Cardmarket)", "Ouvrir Cardmarket avec seulement les offres en état Excellent ou mieux (connexion à Cardmarket requise)", "Abrir Cardmarket solo con ofertas en estado Excellent o mejor (hay que iniciar sesión en Cardmarket)", "Cardmarket nur mit Angeboten in Excellent oder besser öffnen (Anmeldung bei Cardmarket nötig)"]]);
 RECS.push(...[["Tendenza Cardmarket", "Cardmarket trend", "Tendance Cardmarket", "Tendencia de Cardmarket", "Cardmarket-Trend"], ["Media vendite 7 giorni", "7-day sales average", "Moyenne des ventes sur 7 jours", "Media de ventas de 7 días", "Verkaufsdurchschnitt 7 Tage"], [". Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.", ". Prices: average of the sales over the last 7 days, from Cardmarket's public price guide.", ". Prix : moyenne des ventes des 7 derniers jours, d'après le guide des prix public de Cardmarket.", ". Precios: media de las ventas de los últimos 7 días, de la guía de precios pública de Cardmarket.", ". Preise: Durchschnitt der Verkäufe der letzten 7 Tage, aus dem öffentlichen Preisführer von Cardmarket."]]);
+RECS.push(...[["Il grafico compare dal secondo giorno registrato.", "The chart appears from the second recorded day.", "Le graphique apparaît à partir du deuxième jour enregistré.", "El gráfico aparece desde el segundo día registrado.", "Das Diagramm erscheint ab dem zweiten gespeicherten Tag."], ["Mostra il grafico", "Show the chart", "Afficher le graphique", "Mostrar el gráfico", "Diagramm anzeigen"], ["oppure di almeno €", "or by at least €", "ou d'au moins €", "o de al menos €", "oder um mindestens €"], ["Sotto 1 € l'avviso in percentuale non scatta mai, così le carte da pochi centesimi non ti riempiono di avvisi.", "Moves of less than €1 never trigger the percentage alert, so cheap cards don't flood you with alerts.", "En dessous de 1 €, l'alerte en pourcentage ne se déclenche jamais : les cartes à quelques centimes ne vous inondent pas d'alertes.", "Por debajo de 1 € el aviso en porcentaje nunca salta, así las cartas de pocos céntimos no te llenan de avisos.", "Unter 1 € löst die Prozent-Benachrichtigung nie aus, damit Karten für ein paar Cent dich nicht überfluten."], ["Copia il link di questa ricerca", "Copy the link to this search", "Copier le lien de cette recherche", "Copiar el enlace de esta búsqueda", "Link zu dieser Suche kopieren"], ["Link copiato", "Link copied", "Lien copié", "Enlace copiado", "Link kopiert"], ["Copia l'indirizzo dalla barra del browser", "Copy the address from the browser bar", "Copiez l'adresse dans la barre du navigateur", "Copia la dirección de la barra del navegador", "Kopiere die Adresse aus der Browserleiste"]]);
 const DICT={};for(const r of RECS){DICT[r[1]]=DICT[r[1]]||r;DICT[r[0]]=r}
 const ITK=RECS.map(r=>r[0]);
 let LANG='en';try{const l=localStorage.getItem('pc-lang');if(LANGS[l])LANG=l}catch{}
@@ -450,7 +464,9 @@ async function update(manual){
   busy=false;$('#bUpd').disabled=false;
 }
 /* ---------- tutte le carte (data/market.json) ---------- */
-let MK=null,mkShown=50,mkCur=[],mkKey=null,mkQT=0;
+const MKP=[["q", "mkQ", ""], ["p", "mkP", "t"], ["s", "mkS", "ea"], ["w", "mkW", null], ["f", "mkF", "n"], ["l", "mkL", ""], ["min", "mkMin", ""]];
+function mkSaveUrl(){try{const u=new URL(location.href);for(const[k,id,d]of MKP){const v=$('#'+id).value.trim();if(v&&v!==d)u.searchParams.set(k,v);else u.searchParams.delete(k)}history.replaceState(null,'',u)}catch{}}
+let MK=null,mkShown=50,mkCur=[],mkKey=null,mkQT=0;const mkOpen=new Set();
 const FMT_LABEL={commander:'Commander',duel:'Duel Commander',modern:'Modern',legacy:'Legacy',vintage:'Vintage',pauper:'Pauper',pioneer:'Pioneer',standard:'Standard'};
 const WI={1:1,7:2,30:3};
 const exUrl=u=>{try{const x=new URL(u);if(!/(^|\.)cardmarket\.com$/.test(x.hostname)||x.searchParams.has('searchString'))return'';x.searchParams.set('minCondition','3');return x.toString()}catch{return''}};
@@ -462,7 +478,10 @@ async function mkInit(){
   if(!MK||!Array.isArray(MK.cards))return;
   MK.q=MK.cards.map(r=>(r[1]+' '+r[2]+' '+(MK.sets[r[2]]||'')).toLowerCase());
   const sel=$('#mkL'),cur=sel.value;sel.replaceChildren(...[['','Qualsiasi formato'],...MK.formats.map(f=>[f,FMT_LABEL[f]||f])].map(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;return o}));sel.value=cur||'';
-  if(!mkKey){const w=$('#mkW');w.value=MK.cards.some(r=>r[8]!=null)?'7':'1'}
+  const U=new URLSearchParams(location.search);
+  if(!mkKey){for(const[k,id]of MKP)if(U.has(k)){const el=$('#'+id),v=U.get(k);if(el.tagName!=='SELECT'||[...el.options].some(o=>o.value===v))el.value=v}
+    if(!U.has('w')){const w=$('#mkW');w.value=MK.cards.some(r=>r[8]!=null)?'7':'1'}
+    if([...U.keys()].some(k=>MKP.some(m=>m[0]===k)))setTimeout(()=>$('#mk').scrollIntoView(),50)}
   $('#mk').hidden=false;renderMk();renderHero();
 }
 function mkRows(){
@@ -493,29 +512,31 @@ function renderHero(){
 function renderMk(){
   if(!MK)return;
   const foil=$('#mkF').value==='f',avg=$('#mkP').value==='a',o=(avg?14:6)+(foil?4:0);
-  const rows=mkRows();
+  const rows=mkRows();mkSaveUrl();
   if(!rows.length){$('#mkList').innerHTML='<div class="empty">Nessuna carta per questi filtri.</div>';return}
   const have=new Set(D.cards.map(c=>c.id+(c.foil?'|f':'')));
   const ch=(r,k)=>{const l=r[o],b=r[o+k];if(l==null||!b)return'<td class="flat">—</td>';const d=(l-b)/100,p=(l-b)/b*100;return'<td class="'+cls(p)+'">'+vc(p,d)+'</td>'};
-  $('#mkList').innerHTML='<p class="count">'+rows.length.toLocaleString(LOC())+' carte'+(avg?'<span>. Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.</span>':'')+'</p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
+  $('#mkList').innerHTML='<p class="count">'+rows.length.toLocaleString(LOC())+' carte'+(avg?'<span>. Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.</span>':'')+' <button class="x share" data-share="1">Copia il link di questa ricerca</button></p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
     rows.slice(0,mkShown).map((x,i)=>{const r=x.r;
       return'<tr><td class="name"><a href="'+esc(mkUrl(r))+'" target="_blank" rel="noopener" data-pv="'+esc(r[0])+'">'+esc(r[1])+'</a>'+(foil?' <span class="foil">foil</span>':'')+'<small><span class="set">'+esc(r[2])+'</span>'+esc(MK.sets[r[2]]||'')+' #'+esc(r[3])+exLink(mkUrl(r))+'</small></td><td>'+esc(eur(x.last/100))+'</td>'+ch(r,1)+ch(r,2)+ch(r,3)+
-      '<td><span class="spw" data-sp="'+esc(r[0])+'"><svg class="sp" aria-hidden="true"></svg></span></td><td>'+
-      (have.has(r[0]+(foil?'|f':''))?'<span class="msg" style="color:var(--mute)">Già nella lista</span>':'<button class="x" data-follow="'+i+'">Segui</button>')+'</td></tr>'}).join('')+'</tbody></table></div>'+
+      '<td><button class="spb" data-chart="'+esc(r[0])+'" aria-expanded="'+mkOpen.has(r[0])+'" title="Mostra il grafico"><span class="spw" data-sp="'+esc(r[0])+'"><svg class="sp" aria-hidden="true"></svg></span></button></td><td>'+
+      (have.has(r[0]+(foil?'|f':''))?'<span class="msg" style="color:var(--mute)">Già nella lista</span>':'<button class="x" data-follow="'+i+'">Segui</button>')+'</td></tr>'+(mkOpen.has(r[0])?'<tr class="det"><td colspan="7"><div data-big="'+esc(r[0])+'"><p class="note">Carico…</p></div></td></tr>':'')}).join('')+'</tbody></table></div>'+
     (rows.length>mkShown?'<div class="more"><button data-mkmore="1">Mostra altre 50 ('+(rows.length-mkShown).toLocaleString(LOC())+' rimaste)</button></div>':'');
   mkSparks(avg?(foil?'t':'s'):(foil?'f':'e'));
 }
 async function mkSparks(k){
-  if(!SRV)return;const els=[...document.querySelectorAll('#mkList [data-sp]')],by=new Map();
-  for(const el of els){const id=el.dataset.sp;if(!/^[0-9a-f-]{36}$/.test(id))continue;const sh=id.slice(0,2);if(!by.has(sh))by.set(sh,[]);by.get(sh).push(el)}
-  await Promise.all([...by].map(async([sh,l])=>{const d=await shard(sh);for(const el of l){const v=d[el.dataset.sp];if(!v||!el.isConnected)continue;
-    const arr=decS(v[k],SRV.days.length);el.innerHTML=spark(SRV.days.map((day,i)=>[day,arr[i]==null?null:arr[i]/100]).filter(e=>e[1]!=null))}}));
+  if(!SRV)return;const els=[...document.querySelectorAll('#mkList [data-sp],#mkList [data-big]')],by=new Map();
+  for(const el of els){const id=el.dataset.sp||el.dataset.big;if(!/^[0-9a-f-]{36}$/.test(id))continue;const sh=id.slice(0,2);if(!by.has(sh))by.set(sh,[]);by.get(sh).push(el)}
+  await Promise.all([...by].map(async([sh,l])=>{const d=await shard(sh);for(const el of l){const v=d[el.dataset.sp||el.dataset.big];if(!el.isConnected)continue;if(!v){if(el.dataset.big)el.innerHTML=bigChart([]);continue}
+    const arr=decS(v[k],SRV.days.length),ser=SRV.days.map((day,i)=>[day,arr[i]==null?null:arr[i]/100]).filter(e=>e[1]!=null);el.innerHTML=el.dataset.big?bigChart(ser):spark(ser)}}));
 }
 for(const id of ['mkP','mkW','mkS','mkF','mkL'])$('#'+id).addEventListener('change',()=>{mkShown=50;renderMk()});
 $('#mkMin').addEventListener('input',()=>{mkShown=50;clearTimeout(mkQT);mkQT=setTimeout(renderMk,250)});
 $('#mkQ').addEventListener('input',()=>{mkShown=50;clearTimeout(mkQT);mkQT=setTimeout(renderMk,250)});
 $('#mkList').addEventListener('click',async e=>{
   if(e.target.closest('[data-mkmore]')){mkShown+=50;renderMk();return}
+  const ch=e.target.closest('[data-chart]');if(ch){const id=ch.dataset.chart;mkOpen.has(id)?mkOpen.delete(id):mkOpen.add(id);renderMk();return}
+  if(e.target.closest('[data-share]')){const btn=e.target.closest('[data-share]');try{await navigator.clipboard.writeText(location.href);btn.textContent='Link copiato'}catch{btn.textContent='Copia l\'indirizzo dalla barra del browser'}setTimeout(()=>{if(btn.isConnected)btn.textContent='Copia il link di questa ricerca'},2500);return}
   const b=e.target.closest('[data-follow]');if(!b||!live)return;
   const x=mkCur[+b.dataset.follow];if(!x)return;const r=x.r,foil=$('#mkF').value==='f';
   if(D.cards.some(c=>c.id===r[0]&&c.foil===foil))return;
@@ -524,7 +545,8 @@ $('#mkList').addEventListener('click',async e=>{
 });
 async function alertMovers(){
   const thr=D.settings.threshold||10;
-  const big=D.cards.map(c=>{const t=stats(c);return{c,p:t.d1,e:t.e1}}).filter(x=>x.p!=null&&Math.abs(x.p)>=thr).sort((a,b)=>Math.abs(b.p)-Math.abs(a.p));
+  const eThr=+D.settings.eThr||0;
+  const big=D.cards.map(c=>{const t=stats(c);return{c,p:t.d1,e:t.e1}}).filter(x=>x.e!=null&&((x.p!=null&&Math.abs(x.p)>=thr&&Math.abs(x.e)>=1)||(eThr>0&&Math.abs(x.e)>=eThr))).sort((a,b)=>Math.abs(b.e)-Math.abs(a.e));
   const hits=D.cards.filter(c=>{const s=stats(c);return c.target>0&&s.last!=null&&s.last<=c.target&&c.hitOn!==s.ld});
   if(!big.length&&!hits.length)return;
   try{
@@ -730,6 +752,7 @@ $('#bSet').onclick=async()=>{
   renderGroups('S:'+n);shown=50;render();say('Insieme '+n+' salvato.');
 };
 $('#setList').addEventListener('click',async e=>{const b=e.target.closest('[data-unset]');if(!b||!live)return;delete D.sets[b.dataset.unset];await save();renderGroups();render();say('Insieme tolto. I gruppi e le carte restano.')});
+$('#nEur').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(v>0)D.settings.eThr=v;else delete D.settings.eThr;if(live)save()});
 $('#nThr').addEventListener('change',e=>{D.settings.threshold=Math.min(100,Math.max(1,+e.target.value||10));if(live)save()});
 
 /* ---------- image preview ---------- */
@@ -763,13 +786,26 @@ function spark(s){
   const col=v[v.length-1]>=v[0]?'var(--up)':'var(--down)';
   return'<svg class="sp" viewBox="0 0 96 26" aria-hidden="true"><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 }
+function bigChart(s){
+  const v=s.filter(e=>e[1]!=null);if(v.length<2)return'<p class="note">Il grafico compare dal secondo giorno registrato.</p>';
+  const W=640,H=230,L=64,Rt=12,Tp=12,B=30,ys=v.map(e=>e[1]);let mn=Math.min(...ys),mx=Math.max(...ys);if(mx===mn){mx+=mx*.05||1;mn-=mn*.05||1}
+  const pad=(mx-mn)*.08;mn=Math.max(0,mn-pad);mx+=pad;
+  const X=i=>L+i/(v.length-1)*(W-L-Rt),Y=y=>Tp+(1-(y-mn)/(mx-mn))*(H-Tp-B);
+  const pts=v.map((e,i)=>X(i).toFixed(1)+','+Y(e[1]).toFixed(1));
+  const col=v[v.length-1][1]>=v[0][1]?'var(--up)':'var(--down)';
+  let g='';for(let k=0;k<=3;k++){const y=mn+(mx-mn)*k/3,yy=Y(y).toFixed(1);g+='<line x1="'+L+'" x2="'+(W-Rt)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)"/><text x="'+(L-8)+'" y="'+yy+'" dy=".32em" text-anchor="end">'+esc(eur(y))+'</text>'}
+  const xi=[0,Math.floor((v.length-1)/2),v.length-1].filter((x,i,a)=>a.indexOf(x)===i);
+  for(const i of xi)g+='<text x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+(i===0?'start':i===v.length-1?'end':'middle')+'">'+esc(fmtDate(v[i][0]))+'</text>';
+  const dots=v.map((e,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(e[1]).toFixed(1)+'" r="'+(i===v.length-1?4:6)+'" fill="'+(i===v.length-1?col:'transparent')+'"><title>'+esc(fmtDate(e[0])+': '+eur(e[1]))+'</title></circle>').join('');
+  return'<svg class="big" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(eur(v[0][1])+' → '+eur(v[v.length-1][1]))+'">'+g+'<polygon points="'+L+','+(H-B)+' '+pts.join(' ')+' '+(W-Rt)+','+(H-B)+'" fill="'+col+'" opacity=".08"/><polyline points="'+pts.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'+dots+'</svg>';
+}
 const open_=new Set();const keyOf=c=>c.id+(c.foil?'|f':'');
 function days(s){
   const v=s.slice(-30);if(!v.length)return'Nessun prezzo registrato.';
   const mx=Math.max(...v.map(e=>e[1]))||1;
   const out=v.map((e,i)=>{const p=i?v[i-1][1]:null;const pc=p?(e[1]-p)/p*100:null,ed=p?e[1]-p:null;
     return'<div class="day"><span style="text-align:left">'+esc(fmtDate(e[0]))+'</span><i style="width:'+(e[1]/mx*100).toFixed(1)+'%"></i><span>'+esc(eur(e[1]))+'</span><span class="'+cls(pc)+'">'+esc(pctTxt(pc))+'</span><span class="'+cls(pc)+'">'+esc(eurTxt(ed))+'</span></div>'}).reverse();
-  return'<div class="days">'+out.join('')+'</div>'+(v.length<2?'<p class="note">Le variazioni compaiono dal secondo giorno registrato.</p>':'');
+  return bigChart(s)+'<div class="days">'+out.join('')+'</div>'+(v.length<2?'<p class="note">Le variazioni compaiono dal secondo giorno registrato.</p>':'');
 }
 function render(){
   document.querySelector('.sum').hidden=!D.cards.length;
@@ -820,7 +856,7 @@ $('#bCopy').onclick=async()=>{
   try{await navigator.clipboard.writeText(lines.join('\n'));say('Tabella copiata: incollala in un foglio di calcolo.')}catch{say('Non riesco a copiare negli appunti.')}
 };
 $('#bExport').onclick=()=>{const b=new Blob([JSON.stringify(D)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='prezzi-cardmarket-'+today()+'.json';document.body.append(a);a.click();a.remove();say('Copia salvata nella cartella dei download.')};
-$('#fImport').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!j||!Array.isArray(j.cards))throw new Error('non è una copia di questa app');D={settings:{threshold:10},...j};await save();$('#nThr').value=D.settings.threshold||10;renderGroups();shown=50;render();say('Dati caricati: '+D.cards.length+' carte.')}catch(err){say('Non riesco a caricare il file: '+err.message)}e.target.value=''};
+$('#fImport').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!j||!Array.isArray(j.cards))throw new Error('non è una copia di questa app');D={settings:{threshold:10},...j};await save();$('#nThr').value=D.settings.threshold||10;$('#nEur').value=D.settings.eThr||'';renderGroups();shown=50;render();say('Dati caricati: '+D.cards.length+' carte.')}catch(err){say('Non riesco a caricare il file: '+err.message)}e.target.value=''};
 $('#bNotif').onclick=async()=>{try{if(!('Notification' in window))return say('Questo browser non ha le notifiche.');const p=await Notification.requestPermission();say(p==='granted'?'Notifiche attive.':'Notifiche non permesse dal browser.')}catch{say('Questo browser non permette le notifiche da un file aperto sul computer.')}};
 
 /* ---------- icon ---------- */
@@ -843,7 +879,7 @@ function sample(){
 async function start(){
   live=true;await load();await srvInit();
   if(SRV){$('#faqNew').hidden=true;mkInit()}
-  $('#nThr').value=D.settings.threshold||10;renderGroups();render();
+  $('#nThr').value=D.settings.threshold||10;$('#nEur').value=D.settings.eThr||'';renderGroups();render();
   $('#bUpd').onclick=()=>update(true);
   const due=()=>SRV?D.lastUpdate!==SRV.updated:D.lastUpdate!==today();
   if(!D.cards.length)say('La lista è vuota: aggiungi le prime carte qui sotto.');
