@@ -6,7 +6,8 @@ Ogni giorno:
   2. scarica il bulk "default_cards" di Scryfall e prende i prezzi EUR e EUR foil di ogni edizione;
   3. aggiunge il giorno, tiene gli ultimi DAYS_KEEP giorni e riscrive i 256 file;
   4. calcola le classifiche di chi sale e chi scende (1, 7, 30 giorni) in movers.json;
-  4b. aggiunge la media vendite a 7 giorni dal listino pubblico di Cardmarket (price guide);
+  4b. aggiunge dal listino pubblico di Cardmarket (price guide) la media vendite a 7 giorni
+      e il prezzo più basso in vendita del giorno;
   5. scrive market.json: tutte le carte da almeno 1 € con prezzo e prezzi di 1, 7 e 30 giorni prima,
      per la pagina iniziale del sito.
 
@@ -156,7 +157,7 @@ def read_price_guide():
     """Media vendite 7 giorni per idProduct, in centesimi. Se il listino non si scarica, si va avanti senza."""
     try:
         pg = json.loads(http(PRICE_GUIDE))
-        out = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")))
+        out = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil")))
                for it in pg.get("priceGuides", []) if it.get("idProduct")}
         print(f"Listino Cardmarket del {pg.get('createdAt')}: {len(out)} prodotti.")
         return out
@@ -195,11 +196,13 @@ def main():
     pg = {} if a.bulk else read_price_guide()
     if a.guide:
         with open(a.guide, encoding="utf-8") as f:
-            pg = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil"))) for it in json.load(f)["priceGuides"]}
+            pg = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil"))) for it in json.load(f)["priceGuides"]}
     linked = 0
     for cid, c in cur.items():
-        s7, t7 = pg.get(c.pop("cm", None), (None, None))
+        s7, t7, lo, lf = pg.get(c.pop("cm", None), (None, None, None, None))
         c["s"], c["t"] = s7, t7
+        if lo is not None or lf is not None:
+            c["lo"] = [lo, lf]   # prezzo più basso in vendita oggi (normale, foil): solo il valore del giorno
         linked += s7 is not None or t7 is not None
     print(f"Media vendite 7 giorni collegata a {linked} edizioni.")
 
@@ -243,6 +246,8 @@ def main():
         for k in SERIES[1:]:
             if any(v is not None for v in ser[k]):
                 rec[k] = enc(ser[k])
+        if now.get("lo"):
+            rec["lo"] = now["lo"]
         shard_data[cid[:2]][cid] = rec
         if cid in info and max(ne[-1] or 0, nf[-1] or 0) >= MARKET_MIN:
             nm, st, sn, cn, mask, cm = info[cid]
@@ -276,6 +281,8 @@ def main():
                 v = dec(rec.get(k, ""), len(days))[cut:]
                 if any(x is not None for x in v):
                     sr[k] = enc(v)
+            if "lo" in rec:
+                sr["lo"] = rec["lo"]
             if "e" in sr or "f" in sr:
                 sr.setdefault("e", "")
                 short[cid] = sr
