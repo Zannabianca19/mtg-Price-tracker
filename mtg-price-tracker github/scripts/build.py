@@ -5,7 +5,9 @@ Ogni giorno:
   1. rilegge lo storico già pubblicato (meta.json + 256 file h/XX.json);
   2. scarica il bulk "default_cards" di Scryfall e prende i prezzi EUR e EUR foil di ogni edizione;
   3. aggiunge il giorno, tiene gli ultimi DAYS_KEEP giorni e riscrive i 256 file;
-  4. calcola le classifiche di chi sale e chi scende (1, 7, 30 giorni) in movers.json.
+  4. calcola le classifiche di chi sale e chi scende (1, 7, 30 giorni) in movers.json;
+  5. scrive market.json: tutte le carte da almeno 1 € con prezzo e prezzi di 1, 7 e 30 giorni prima,
+     per la pagina iniziale del sito.
 
 Uso:
   python build.py --out _site/data --prev https://utente.github.io/repo/data
@@ -17,6 +19,8 @@ DAYS_KEEP = 120         # archivio completo (a/), letto solo da questo script
 CLIENT_DAYS = 35        # quello che scarica l'app (h/): bastano 30 giorni + margine
 MIN_CENTS = 100          # classifiche solo per carte da almeno 1 € (prima e dopo)
 TOP = 300                # voci per classifica
+MARKET_MIN = 100         # elenco "tutte le carte" (market.json): edizioni da almeno 1 €, normale o foil
+CM_PREFIX = "https://www.cardmarket.com/en/Magic/Products"
 FORMATS = ["commander", "duel", "modern", "legacy", "vintage", "pauper", "pioneer", "standard"]
 HEAD = {"User-Agent": "CardmarketPriceArchive/1.0 (GitHub Actions; daily, once a day)", "Accept": "application/json"}
 SHARDS = [f"{i:02x}" for i in range(256)]
@@ -194,6 +198,7 @@ def main():
     cdays = days[-CLIENT_DAYS:]
     cut = len(days) - len(cdays)
     shard_data = {sh: {} for sh in SHARDS}
+    market, set_names = [], {}
     ids = set(hist) | set(cur)
     for cid in ids:
         oe, of = hist.get(cid, ([], []))
@@ -211,6 +216,14 @@ def main():
         if any(v is not None for v in nf):
             rec["f"] = enc(nf)
         shard_data[cid[:2]][cid] = rec
+        if cid in info and max(ne[-1] or 0, nf[-1] or 0) >= MARKET_MIN:
+            nm, st, sn, cn, mask, cm = info[cid]
+            set_names[st] = sn
+            row = [cid, nm, st, cn, mask, cm[len(CM_PREFIX):] if cm.startswith(CM_PREFIX) else cm]
+            for arr in (ne, nf):
+                row.append(arr[-1])
+                row.extend(arr[bases[w]] if bases[w] is not None else None for w in (1, 7, 30))
+            market.append(row)
         if cid in info:
             for fin, arr in (("n", ne), ("f", nf)):
                 last = arr[-1]
@@ -251,6 +264,13 @@ def main():
     with open(os.path.join(a.out, "movers.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": today, "formats": FORMATS, "fields": ["id", "name", "set", "setName", "cn", "price", "base", "legal", "cm"], "lists": out_m},
                   f, separators=(",", ":"), ensure_ascii=False)
+    market.sort(key=lambda r: -max(r[6] or 0, r[10] or 0))
+    with open(os.path.join(a.out, "market.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": today, "formats": FORMATS, "cmPrefix": CM_PREFIX, "sets": set_names,
+                   "fields": ["id", "name", "set", "cn", "legal", "cm", "price", "base1", "base7", "base30",
+                              "foil", "foilBase1", "foilBase7", "foilBase30"], "cards": market},
+                  f, separators=(",", ":"), ensure_ascii=False)
+    print(f"market.json: {len(market)} carte da almeno {MARKET_MIN / 100:.0f} €")
     n_cards = sum(len(d) for d in shard_data.values())
     with open(os.path.join(a.out, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": today, "days": cdays, "archiveDays": len(days), "cards": n_cards, "source": "Scryfall bulk default_cards (Cardmarket trend price, EUR)"}, f)
