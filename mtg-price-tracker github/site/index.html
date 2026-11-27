@@ -12,113 +12,164 @@
 <meta property="og:description" content="Free Cardmarket price tracker for MTG: follow trend prices of any card, foil and full art versions, whole sets and Commander or Duel Commander decks. Daily changes, alerts, 5 languages.">
 <meta property="og:image" content="og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231c1626'/%3E%3Cpath d='M12 44 26 30l10 7 16-18' stroke='%23c99a2e' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='10' y='4' width='44' height='56' rx='5' fill='%230f3046'/%3E%3Cpath d='M17 42 27 31l8 6 12-15' stroke='%23f7d046' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Cardmarket Price Tracker for MTG", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any (web browser)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "description": "Free Cardmarket price tracker for MTG: follow trend prices of any card, foil and full art versions, whole sets and Commander or Duel Commander decks. Daily changes, alerts, 5 languages.", "inLanguage": ["en", "it", "fr", "es", "de"]}</script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <style>
-/* VOICE: un registro da mercante, asciutto e preciso: conta solo quanto si è mosso il prezzo.
-   IDEA: la lavagna dei prezzi di un negozio di carte, con il listino che si aggiorna ogni mattina.
-   PICTURE: la tabella stessa, con frecce di variazione e una piccola curva per ogni carta.
-   COLOUR and TYPE: banda nero-viola come il retro delle carte, bianco carta, verde per i rialzi, rosso per i ribassi, oro come accento; Cinzel per il titolo, Inter con cifre tabellari.
-   LAYOUT: banda in alto con valore totale e i più mossi, sotto il listino a tutta larghezza, aggiunta e importazione in pannelli richiudibili.
-*/
-:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121016);--ink:light-dark(#16131c,#ece8f2);--mute:light-dark(#5d5868,#a49eb0);--line:light-dark(#e6e2ec,#2b2733);--band:#1c1626;--bandInk:#f4efe6;--gold:#c99a2e;--up:light-dark(#0a7a4b,#3fcf8e);--down:light-dark(#c1121f,#ff6b6b);--soft:light-dark(#f6f4f8,#1a1720)}
+/* IDEA: il tavolo da gioco. In cima un tappetino blu con le carte che si sono mosse di più, ognuna col cartellino del prezzo
+   come nei raccoglitori dei negozi; sotto, il listino di tutte le carte e la tua lista.
+   COLORI dal mana: blu Isola per azioni e link, verde Foresta per i rialzi, rosso Montagna per i ribassi, grigio cartoncino
+   come sfondo, giallo cartellino per i prezzi in evidenza, etichetta iridescente per il foil.
+   CARATTERE: Archivo, un solo family: stretto e pesante per i titoli, normale con cifre tabellari per i dati.
+   MOVIMENTO: uno solo, le tre carte che vengono servite sul tappetino all'apertura. */
+:root{color-scheme:light dark;
+  --bg:light-dark(#eef0f3,#13161a);--card:light-dark(#ffffff,#1b1f25);--ink:light-dark(#1a1c20,#e8eaee);--mute:light-dark(#5d6470,#9aa2ae);
+  --line:light-dark(#d9dde3,#2c323b);--soft:light-dark(#f4f5f7,#22272e);--blue:light-dark(#0e68ab,#62aee8);
+  --up:light-dark(#00733e,#3cc47c);--down:light-dark(#c8202a,#ff6b6b);--mat:#0f3046;--matInk:#e6eef4;--matMute:#9fb6c7;--tag:#f7d046;
+  --gold:var(--blue);--band:var(--mat);--bandInk:var(--matInk)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
-.band{padding:clamp(24px,4vw,48px) max(5vw,16px)}
-.top{background:var(--band);color:var(--bandInk)}
-.wrap{max-width:1240px;margin:0 auto}
-h1{font:700 clamp(30px,4.4vw,46px)/1.05 Cinzel,Georgia,serif;margin:0 0 6px;text-wrap:balance}
-.sub{color:#cfc6db;margin:0;max-width:62ch}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px;margin-top:24px}
-.stat{border-top:2px solid var(--gold);padding-top:10px}
-.stat b{display:block;font-size:clamp(24px,3vw,32px);font-weight:600;white-space:nowrap}
-.stat span{color:#cfc6db;font-size:14px}
-.movers{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.chip{background:#2a2236;border-radius:999px;padding:6px 12px;font-size:14px;white-space:nowrap}
-.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:22px}
-button,.btn{font:600 15px Inter,sans-serif;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer}
-.top button{background:#2a2236;color:var(--bandInk);border-color:#3b3148}
-button.main{background:var(--gold);color:#1c1626;border-color:var(--gold)}
-button:disabled{opacity:.5;cursor:default}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-.msg{font-size:14px;color:#cfc6db}
-input,select,textarea{font:16px Inter,sans-serif;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
-textarea{min-height:150px;resize:vertical}
-.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;margin-bottom:20px}
-details{border:1px solid var(--line);border-radius:12px;padding:0 16px;background:var(--soft)}
-summary{min-height:48px;display:flex;align-items:center;font-weight:600;cursor:pointer}
-.pane{display:grid;gap:10px;padding-bottom:16px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>input{flex:1 1 200px}
-label.chk{display:flex;gap:8px;align-items:center;min-height:44px}label.chk input{width:22px;min-height:22px}
-.head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:10px}
-.head h2{font:600 22px/1.2 Cinzel,serif;margin:0}
-.ctrl{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) minmax(0,.6fr) minmax(0,.6fr) minmax(0,1.2fr);gap:10px;margin-bottom:14px}
-.ctrl.eq{grid-template-columns:repeat(5,minmax(0,1fr))}.ctrl.eq.six{grid-template-columns:minmax(0,1.7fr) repeat(5,minmax(0,1fr))}@media(max-width:900px){.ctrl.eq,.ctrl.eq.six{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.ctrl label{display:grid;gap:4px;font-size:13px;color:var(--mute);font-weight:600}
-@media(max-width:900px){.ctrl{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.more{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
+a{color:var(--blue)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,16px)}
 
+/* barra in alto */
+.topbar{background:var(--mat);color:var(--matInk);border-bottom:1px solid #ffffff14}
+.tb{display:flex;align-items:center;gap:24px;min-height:60px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;color:var(--matInk);text-decoration:none;font-weight:800;font-stretch:80%;font-size:20px;letter-spacing:.005em}
+.brand svg{width:22px;height:28px;flex:none}
+.tb nav{display:flex;gap:20px;flex:1}
+.tb nav a{color:var(--matMute);text-decoration:none;font-weight:600;font-size:15px}
+.tb nav a:hover{color:var(--matInk)}
+.lang{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--matMute)}
+.lang select{width:auto;min-height:36px;background:#ffffff12;color:var(--matInk);border-color:#ffffff2a}
+.lang select option{color:#1a1c20}
+
+/* il tappetino */
+.hero{background:var(--mat);color:var(--matInk);overflow:hidden}
+.hg{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:clamp(36px,6vw,72px)}
+h1{font-weight:800;font-stretch:72%;font-size:clamp(40px,6.2vw,76px);line-height:.94;letter-spacing:-.005em;margin:0 0 18px;text-wrap:balance}
+.sub{color:#c6d5e0;margin:0;max-width:46ch;font-size:clamp(16px,1.5vw,18px)}
+.upd{color:var(--matMute);font-size:14px;margin:18px 0 0}
+.fan{position:relative;height:clamp(310px,32vw,420px);margin:0;padding-bottom:30px}
+.pc{position:absolute;left:50%;top:46%;width:clamp(150px,15.5vw,206px);aspect-ratio:488/680;border-radius:4.75%/3.4%;background:#24465e;box-shadow:0 18px 40px #0007;text-decoration:none;color:inherit;transform:translate(-50%,-50%) translate(var(--x),var(--y)) rotate(var(--r))}
+.pc:nth-child(1){--x:-62%;--y:4%;--r:-9deg;z-index:1}.pc:nth-child(2){--x:0%;--y:-3%;--r:0deg;z-index:3}.pc:nth-child(3){--x:62%;--y:4%;--r:9deg;z-index:2}
+.pc img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.pc:hover,.pc:focus-visible{z-index:5}
+.tag{position:absolute;right:-10px;bottom:16%;background:var(--tag);color:#1a1c20;font-weight:800;font-size:15px;line-height:1.15;padding:6px 10px 5px;border-radius:3px;transform:rotate(-4deg);box-shadow:0 3px 8px #0005;white-space:nowrap;text-align:right}
+.tag small{display:block;font-weight:600;font-size:12px}
+.pc:nth-child(1) .tag{right:auto;left:-10px;transform:rotate(4deg)}
+.tag.down{color:#8f1017}.tag.up{color:#00552e}
+.fan figcaption{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:13px;color:var(--matMute)}
+@media(prefers-reduced-motion:no-preference){.pc{animation:deal .7s cubic-bezier(.2,.8,.2,1) both}.pc:nth-child(2){animation-delay:.08s}.pc:nth-child(3){animation-delay:.16s}
+  @keyframes deal{from{opacity:0;transform:translate(-50%,-50%) translate(0,40%) rotate(0deg)}}}
+
+/* sezioni */
+main{padding-bottom:64px}
+section.block{padding-top:clamp(32px,4vw,48px)}
+h2{font-weight:800;font-stretch:80%;font-size:clamp(26px,3vw,34px);line-height:1.05;margin:0}
+.head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.lead{margin:0 0 18px;color:var(--mute);max-width:70ch}
+.msg{font-size:14px;color:var(--mute)}
+
+/* comandi */
+button,.btn{font:600 15px Archivo,sans-serif;min-height:42px;padding:0 16px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button:hover,.btn:hover{border-color:var(--mute)}
+button.main{background:var(--blue);color:#fff;border-color:var(--blue)}
+button.main:hover{filter:brightness(1.08)}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.topbar :focus-visible,.hero :focus-visible{outline-color:var(--tag)}
+input,select,textarea{font:16px Archivo,sans-serif;min-height:42px;padding:8px 11px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:100%}
+textarea{min-height:150px;resize:vertical}
+.ctrl{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) minmax(0,.6fr) minmax(0,.6fr) minmax(0,1.2fr);gap:10px;margin-bottom:16px}
+.ctrl.eq{grid-template-columns:repeat(5,minmax(0,1fr))}.ctrl.eq.six{grid-template-columns:minmax(0,1.5fr) minmax(0,1.5fr) repeat(4,minmax(0,1fr))}
+.ctrl label{display:grid;gap:4px;font-size:13px;color:var(--mute);font-weight:600}
+@media(max-width:900px){.ctrl,.ctrl.eq,.ctrl.eq.six{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.more{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>input{flex:1 1 200px}
+label.chk{display:flex;gap:8px;align-items:center;min-height:42px}label.chk input{width:22px;min-height:22px}
+
+/* listino */
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:10px}
+.count{margin:0 0 8px;font-size:14px;color:var(--mute)}
 table{width:100%;border-collapse:collapse}
-th{font-size:13px;color:var(--mute);font-weight:600;text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap}
+th{font-size:13px;color:var(--mute);font-weight:600;text-align:right;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
 th:first-child{text-align:left}th[data-k]{cursor:pointer}th[data-k]:hover{color:var(--ink)}
-td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-td.name{text-align:left;white-space:normal}
-td.name a{color:var(--ink);font-weight:600;text-decoration:none}td.name a:hover{text-decoration:underline}
-td.name small{display:block;color:var(--mute);font-size:13px}
-.eu{display:block;font-size:13px;font-weight:500;opacity:.85}
-.up{color:var(--up);font-weight:600}.down{color:var(--down);font-weight:600}.flat{color:var(--mute)}
+td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--soft)}
+td.name{text-align:left;white-space:normal;min-width:220px}
+td.name a{color:var(--ink);font-weight:700;text-decoration:none}td.name a:hover{color:var(--blue);text-decoration:underline}
+td.name small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
+.set{display:inline-block;font-size:11px;font-weight:700;line-height:1;padding:3px 5px;border:1px solid var(--line);border-radius:3px;margin-right:6px;color:var(--mute);vertical-align:1px}
+.eu{display:block;font-size:13px;font-weight:500;opacity:.9}
+.up{color:var(--up);font-weight:700}.down{color:var(--down);font-weight:700}.flat{color:var(--mute)}
 svg.sp{width:96px;height:26px;display:inline-block;vertical-align:middle}
-td input.q{width:64px;min-height:36px;padding:4px 8px;text-align:right}
-button.x{min-height:36px;padding:0 10px;font-size:14px}
-.empty{padding:40px 16px;text-align:center;color:var(--mute);border:1px dashed var(--line);border-radius:12px}
+td input.q{width:64px;min-height:34px;padding:4px 8px;text-align:right}
+button.x,button.dd{min-height:34px;padding:0 11px;font-size:14px}
+.empty{padding:40px 16px;text-align:center;color:var(--mute)}
+.sheet .empty{border:0}
+:not(.sheet)>.empty{border:1px dashed var(--line);border-radius:10px}
 .note{font-size:13px;color:var(--mute);margin-top:14px}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--band);color:var(--bandInk);padding:10px 16px;border-radius:12px;display:none;gap:12px;align-items:center;box-shadow:0 8px 24px #0005;max-width:calc(100vw - 32px)}
-.toast.on{display:flex}.toast button{min-height:36px}
-.sample{display:inline-block;background:var(--gold);color:#1c1626;font-size:13px;font-weight:600;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle}
-@media(prefers-reduced-motion:no-preference){tbody tr{animation:in .35s ease both}@keyframes in{from{opacity:0;transform:translateY(4px)}}}
+.sample{display:inline-block;background:var(--tag);color:#1a1c20;font-size:12px;font-weight:700;border-radius:3px;padding:2px 7px;margin-left:8px;vertical-align:2px}
+.foil{display:inline-block;font-size:12px;font-weight:700;color:#3b3550;border-radius:3px;padding:2px 7px;margin-left:8px;vertical-align:2px;background:linear-gradient(100deg,#f6d3e8,#d3e4fb 35%,#d6f3df 65%,#f8ecc4)}
 .scroll{overflow-x:auto}
-.how{margin-top:40px;border-top:1px solid var(--line);padding-top:24px;max-width:760px}.how h2{font:600 22px/1.2 Cinzel,serif;margin:18px 0 10px}.how li{margin:6px 0}.how details{background:none;border:0;padding:0}.how summary{min-height:40px}
-#pv{position:fixed;z-index:20;pointer-events:none;width:250px;aspect-ratio:488/680;border-radius:12px;background:var(--soft) center/cover no-repeat;box-shadow:0 12px 32px #0006;display:none}
-#pv.on{display:block}#pv.load::after{content:attr(data-load);position:absolute;inset:auto 0 45% 0;text-align:center;font-size:14px;color:var(--mute)}
+
+/* la tua lista */
+.sum{display:flex;flex-wrap:wrap;gap:10px 36px;margin:4px 0 14px;padding:0}
+.sum div{display:flex;flex-direction:column-reverse}
+.sum dt{font-size:13px;color:var(--mute)}
+.sum dd{margin:0;font-weight:800;font-stretch:85%;font-size:24px;white-space:nowrap}
+.sum dd.up,.sum dd.down{font-weight:800}
+.movers{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:14px;white-space:nowrap}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 18px}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px;margin-bottom:22px;align-items:start}
+details{border:1px solid var(--line);border-radius:10px;padding:0 16px;background:var(--card)}
+summary{min-height:48px;display:flex;align-items:center;font-weight:700;cursor:pointer}
+.pane{display:grid;gap:10px;padding-bottom:16px}
 tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px 14px}
 .days{display:grid;gap:4px;max-width:640px}
 .day{display:grid;grid-template-columns:5.5em minmax(0,1fr) 6.5em 5.5em 6.5em;gap:10px;align-items:center;font-size:14px}
-.day i{display:block;height:10px;border-radius:5px;background:var(--gold);opacity:.8}
+.day i{display:block;height:8px;border-radius:2px;background:var(--blue);opacity:.75}
 .day span{text-align:right;white-space:nowrap}
-button.dd{min-height:36px;padding:0 10px;font-size:14px}
+
+/* come funziona */
+.how{margin-top:56px;border-top:1px solid var(--line);padding-top:8px;max-width:760px}
+.how h2{font-size:26px;margin:28px 0 10px}.how li{margin:6px 0}.how details{background:none;border:0;padding:0}.how summary{min-height:40px}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--mat);color:var(--matInk);padding:10px 16px;border-radius:8px;display:none;gap:12px;align-items:center;box-shadow:0 8px 24px #0005;max-width:calc(100vw - 32px)}
+.toast.on{display:flex}.toast button{min-height:34px}
+#pv{position:fixed;z-index:20;pointer-events:none;width:250px;aspect-ratio:488/680;border-radius:4.75%/3.4%;background:var(--soft) center/cover no-repeat;box-shadow:0 12px 32px #0006;display:none}
+#pv.on{display:block}#pv.load::after{content:attr(data-load);position:absolute;inset:auto 0 45% 0;text-align:center;font-size:14px;color:var(--mute)}
+
+@media(max-width:820px){.hg{grid-template-columns:1fr;gap:20px}.fan{height:290px}.pc{width:130px}.tb nav{display:none}.lang{margin-left:auto}.pc{width:106px}.pc:nth-child(1){--x:-72%}.pc:nth-child(3){--x:72%}.tag{font-size:13px;right:-4px;padding:4px 7px}.tag small{font-size:11px}.pc:nth-child(1) .tag{left:-4px}}
 @media(max-width:600px){.stack tr.det td{padding-inline-start:0}.stack tr.det td::before{display:none}.day{grid-template-columns:4.2em minmax(0,1fr) 5em 4.2em 5em;gap:5px}.eu{display:inline;margin-inline-start:6px}table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute)}.stack td:empty{display:none}.stack td.name{padding-inline-start:0}.stack td.name::before{display:none}}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
 <body>
-<header class="band top"><div class="wrap">
-  <h1>Cardmarket Price Tracker <span id="demo" class="sample" hidden>Sample data</span></h1>
-  <p class="sub" id="intro">The cards you follow, with the Cardmarket trend price updated once a day and how much it has moved.</p>
-  <div class="stats">
-    <div class="stat"><b id="sTot">—</b><span id="lTot">Value of what you see</span></div>
-    <div class="stat"><b id="sDelta">—</b><span>Since the previous update</span></div>
-    <div class="stat"><b id="sUpDown">—</b><span>Cards up / down</span></div>
-    <div class="stat"><b id="sDate">—</b><span>Last update</span></div>
-  </div>
-  <div class="movers" id="movers"></div>
-  <div class="bar" id="bar">
-    <label class="msg" style="display:inline-flex;gap:8px;align-items:center">Language <select id="selLang" style="width:auto;min-height:40px"></select></label>
-    <button class="main" id="bUpd">Update prices</button>
-    <button id="bCopy">Copy as table</button>
-    <button id="bExport">Save a backup</button>
-    <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">Load a backup<input type="file" id="fImport" accept=".json,application/json" hidden></label>
-    <span class="msg" id="msg" role="status"></span>
-  </div>
+<header class="topbar"><div class="wrap tb">
+  <a class="brand" href="#top" id="top"><svg viewBox="0 0 22 28" aria-hidden="true"><rect x="1" y="1" width="20" height="26" rx="2.5" fill="none" stroke="#f7d046" stroke-width="2"/><path d="M5 19l4.5-5 3.5 2.6L17 11" fill="none" stroke="#f7d046" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardmarket Price Tracker</a>
+  <nav><a href="#mk">All cards</a><a href="#mine">Your list</a><a href="#how-it-works">How it works</a></nav>
+  <label class="lang">Language <select id="selLang"></select></label>
 </div></header>
-
-<main class="band"><div class="wrap">
-  <section id="mk" hidden style="margin-bottom:28px">
+<div class="hero"><div class="wrap hg">
+  <div>
+    <h1>What every Magic card is worth on Cardmarket today <span id="demo" class="sample" hidden>Sample data</span></h1>
+    <p class="sub" id="intro">The trend price of more than 40,000 printings, updated every day, with how much each one rose or fell. Follow your cards and decks for free, without an account.</p>
+    <p class="upd" id="heroDate"></p>
+  </div>
+  <figure class="fan" id="fan"><a class="pc"></a><a class="pc"></a><a class="pc"></a><figcaption id="fanCap"></figcaption></figure>
+</div></div>
+<main><div class="wrap">
+  <section id="mk" class="block" hidden>
     <div class="head"><h2>All cards</h2><span class="msg" id="mkDate" style="color:var(--mute)"></span></div>
-    <p class="note" style="margin:0 0 12px">Every card worth at least €1 on Cardmarket and how much its price has moved. Search, filter and sort as you like; press «Follow» to put a card in your list.</p>
+    <p class="lead">Every card worth at least €1 on Cardmarket and how much its price has moved. Search, filter and sort as you like; press «Follow» to put a card in your list.</p>
     <div class="ctrl eq six">
       <label>Search<input id="mkQ" type="search" placeholder="Card or set name, e.g. Sol Ring" autocomplete="off"></label>
       <label>Sort by<select id="mkS"><option value="ea">Biggest movers in euros</option><option value="eu">Biggest rise in euros</option><option value="ed">Biggest drop in euros</option><option value="pu">Biggest rise in %</option><option value="pd">Biggest drop in %</option><option value="pr">Highest price</option><option value="nm">Name A to Z</option></select></label>
@@ -129,6 +180,22 @@ button.dd{min-height:36px;padding:0 10px;font-size:14px}
     </div>
     <div id="mkList"></div>
   </section>
+<section id="mine" class="block">
+  <div class="head"><h2>Your list <span class="msg" id="count"></span></h2></div>
+  <dl class="sum">
+    <div><dt id="lTot">Value of what you see</dt><dd id="sTot">—</dd></div>
+    <div><dt>Since the previous update</dt><dd id="sDelta">—</dd></div>
+    <div><dt>Cards up / down</dt><dd id="sUpDown">—</dd></div>
+    <div><dt>Last update</dt><dd id="sDate">—</dd></div>
+  </dl>
+  <div class="movers" id="movers"></div>
+  <div class="bar" id="bar">
+    <button class="main" id="bUpd">Update prices</button>
+    <button id="bCopy">Copy as table</button>
+    <button id="bExport">Save a backup</button>
+    <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">Load a backup<input type="file" id="fImport" accept=".json,application/json" hidden></label>
+    <span class="msg" id="msg" role="status"></span>
+  </div>
   <div class="tools" id="tools">
     <details open id="dAdd"><summary>Add a card</summary><div class="pane">
       <div class="row"><input id="qName" list="sugg" placeholder="Card name in English, e.g. Sol Ring" autocomplete="off"><datalist id="sugg"></datalist><button id="bFind">Find printings</button></div>
@@ -173,8 +240,6 @@ button.dd{min-height:36px;padding:0 10px;font-size:14px}
     </div></details>
   </div>
 
-  
-  <div class="head"><h2>Your list <span class="msg" id="count" style="font:500 15px Inter,sans-serif;color:var(--mute)"></span></h2></div>
   <div class="ctrl">
     <label>Group<span class="row" style="gap:6px"><select id="selGrp" style="flex:1 1 160px"></select><button class="x" id="bDelGrp" hidden>Remove</button></span></label>
     <label>Sort by<select id="selSort">
@@ -194,6 +259,7 @@ button.dd{min-height:36px;padding:0 10px;font-size:14px}
   </div>
   <div id="list"></div>
   <p class="note">Source: Cardmarket trend price for the chosen printing, via Scryfall, updated once a day. History starts on the day you add the card and is stored in this browser: clearing browsing data deletes it, so press «Save a backup» now and then. To move to another computer or browser, use «Load a backup».</p>
+  </section>
   <section class="how" id="how-it-works">
     <h2>How it works</h2>
     <p>A free Cardmarket price tracker for Magic: The Gathering. It runs in your browser, with no account and nothing to install.</p>
@@ -225,6 +291,7 @@ const RECS=[["Prezzi Cardmarket", "Cardmarket Price Tracker", "Prix Cardmarket",
 RECS.push(...[["Classifiche del mercato", "Market movers", "Mouvements du marché", "Movimientos del mercado", "Marktbewegungen"], ["Periodo", "Period", "Période", "Periodo", "Zeitraum"], ["Direzione", "Direction", "Sens", "Dirección", "Richtung"], ["In rialzo", "Rising", "En hausse", "Al alza", "Steigend"], ["In ribasso", "Falling", "En baisse", "A la baja", "Fallend"], ["Versione", "Version", "Version", "Versión", "Version"], ["Normale", "Normal", "Normale", "Normal", "Normal"], ["Segui", "Follow", "Suivre", "Seguir", "Folgen"], ["Già nella lista", "In your list", "Dans votre liste", "En tu lista", "In deiner Liste"], ["Prezzi dall'archivio comune, aggiornati il ", "Prices from the shared archive, updated ", "Prix de l'archive commune, mis à jour le ", "Precios del archivo común, actualizados el ", "Preise aus dem gemeinsamen Archiv, aktualisiert am "], ["Le classifiche compaiono dal secondo giorno dell'archivio.", "Rankings appear from the archive's second day.", "Les classements apparaissent à partir du deuxième jour de l'archive.", "Las clasificaciones aparecen desde el segundo día del archivo.", "Ranglisten erscheinen ab dem zweiten Tag des Archivs."], ["Nessuna carta per questi filtri.", "No cards for these filters.", "Aucune carte pour ces filtres.", "No hay cartas para estos filtros.", "Keine Karten für diese Filter."], ["Variazione", "Change", "Variation", "Cambio", "Änderung"], ["Prima", "Before", "Avant", "Antes", "Vorher"], ["Le carte che salgono e scendono di più su Cardmarket, tra quelle da almeno 1 €.", "The cards rising and falling the most on Cardmarket, among those worth at least €1.", "Les cartes qui montent et baissent le plus sur Cardmarket, parmi celles d'au moins 1 €.", "Las cartas que más suben y bajan en Cardmarket, entre las de al menos 1 €.", "Die Karten mit den stärksten Anstiegen und Rückgängen auf Cardmarket, ab 1 €."], [" seguita.", " followed.", " suivie.", " seguida.", " wird verfolgt."]]);
 RECS.push(...[["Più mosse in euro · 1 giorno","Biggest movers in euros · 1 day","Plus forts mouvements en euros · 1 jour","Más movidas en euros · 1 día","Stärkste Bewegung in Euro · 1 Tag"],["Aumento maggiore in euro · 1 giorno","Biggest rise in euros · 1 day","Plus forte hausse en euros · 1 jour","Mayor subida en euros · 1 día","Größter Anstieg in Euro · 1 Tag"],["Calo maggiore in euro · 1 giorno","Biggest drop in euros · 1 day","Plus forte baisse en euros · 1 jour","Mayor bajada en euros · 1 día","Größter Rückgang in Euro · 1 Tag"],["Aumento maggiore in euro · 30 giorni","Biggest rise in euros · 30 days","Plus forte hausse en euros · 30 jours","Mayor subida en euros · 30 días","Größter Anstieg in Euro · 30 Tage"],["Variazione in euro","Change in euros","Variation en euros","Variación en euros","Veränderung in Euro"],["Variazione in %","Change in %","Variation en %","Variación en %","Veränderung in %"],["Variazione in €","Change in €","Variation en €","Variación en €","Veränderung in €"],["€ 1 giorno","€ 1 day","€ 1 jour","€ 1 día","€ 1 Tag"],["€ 7 giorni","€ 7 days","€ 7 jours","€ 7 días","€ 7 Tage"],["€ 30 giorni","€ 30 days","€ 30 jours","€ 30 días","€ 30 Tage"]]);
 RECS.push(...[["Tutte le carte da almeno 1 € su Cardmarket e quanto si è mosso il loro prezzo. Cerca, filtra e ordina come vuoi; premi «Segui» per mettere una carta nella tua lista.", "Every card worth at least €1 on Cardmarket and how much its price has moved. Search, filter and sort as you like; press «Follow» to put a card in your list.", "Toutes les cartes à partir de 1 € sur Cardmarket et l'évolution de leur prix. Cherchez, filtrez et triez comme vous voulez ; appuyez sur «Suivre» pour ajouter une carte à votre liste.", "Todas las cartas de al menos 1 € en Cardmarket y cuánto se ha movido su precio. Busca, filtra y ordena como quieras; pulsa «Seguir» para poner una carta en tu lista.", "Alle Karten ab 1 € auf Cardmarket und wie sich ihr Preis bewegt hat. Suche, filtere und sortiere, wie du willst; drücke «Folgen», um eine Karte in deine Liste aufzunehmen."], ["Nome della carta o dell'edizione, es. Sol Ring", "Card or set name, e.g. Sol Ring", "Nom de la carte ou de l'édition, ex. Sol Ring", "Nombre de la carta o de la edición, p. ej. Sol Ring", "Karten- oder Set-Name, z. B. Sol Ring"], ["Più mosse in euro", "Biggest movers in euros", "Plus forts mouvements en euros", "Más movidas en euros", "Stärkste Bewegung in Euro"], ["Aumento maggiore in euro", "Biggest rise in euros", "Plus forte hausse en euros", "Mayor subida en euros", "Größter Anstieg in Euro"], ["Calo maggiore in euro", "Biggest drop in euros", "Plus forte baisse en euros", "Mayor bajada en euros", "Größter Rückgang in Euro"], ["Rialzo maggiore in %", "Biggest rise in %", "Plus forte hausse en %", "Mayor subida en %", "Größter Anstieg in %"], ["Ribasso maggiore in %", "Biggest drop in %", "Plus forte baisse en %", "Mayor bajada en %", "Größter Rückgang in %"]]);
+RECS.push(...[["Quanto vale oggi ogni carta Magic su Cardmarket", "What every Magic card is worth on Cardmarket today", "Ce que vaut chaque carte Magic sur Cardmarket aujourd'hui", "Cuánto vale hoy cada carta de Magic en Cardmarket", "Was jede Magic-Karte heute auf Cardmarket wert ist"], ["Il prezzo di tendenza di oltre 40.000 edizioni, aggiornato ogni giorno, con quanto è salito o sceso. Segui le tue carte e i tuoi mazzi, gratis e senza account.", "The trend price of more than 40,000 printings, updated every day, with how much each one rose or fell. Follow your cards and decks for free, without an account.", "Le prix tendance de plus de 40 000 éditions, mis à jour chaque jour, avec sa hausse ou sa baisse. Suivez vos cartes et vos decks gratuitement, sans compte.", "El precio de tendencia de más de 40.000 ediciones, actualizado cada día, con cuánto ha subido o bajado. Sigue tus cartas y mazos gratis y sin cuenta.", "Der Trendpreis von über 40.000 Drucken, täglich aktualisiert, mit Anstieg oder Rückgang. Verfolge deine Karten und Decks kostenlos und ohne Konto."], ["Le tre carte che si sono mosse di più in euro nell'ultimo giorno", "The three cards that moved the most in euros over the last day", "Les trois cartes qui ont le plus bougé en euros sur le dernier jour", "Las tres cartas que más se han movido en euros en el último día", "Die drei Karten mit der größten Bewegung in Euro am letzten Tag"], ["Le carte più care oggi", "The most expensive cards today", "Les cartes les plus chères aujourd'hui", "Las cartas más caras hoy", "Die teuersten Karten heute"]]);
 const DICT={};for(const r of RECS){DICT[r[1]]=DICT[r[1]]||r;DICT[r[0]]=r}
 const ITK=RECS.map(r=>r[0]);
 let LANG='en';try{const l=localStorage.getItem('pc-lang');if(LANGS[l])LANG=l}catch{}
@@ -389,7 +456,7 @@ async function mkInit(){
   MK.q=MK.cards.map(r=>(r[1]+' '+r[2]+' '+(MK.sets[r[2]]||'')).toLowerCase());
   const sel=$('#mkL'),cur=sel.value;sel.replaceChildren(...[['','Qualsiasi formato'],...MK.formats.map(f=>[f,FMT_LABEL[f]||f])].map(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;return o}));sel.value=cur||'';
   if(!mkKey){const w=$('#mkW');w.value=MK.cards.some(r=>r[8]!=null)?'7':'1'}
-  $('#mk').hidden=false;renderMk();
+  $('#mk').hidden=false;renderMk();renderHero();
 }
 function mkRows(){
   const foil=$('#mkF').value==='f',o=foil?10:6,w=WI[$('#mkW').value]||1,s=$('#mkS').value;
@@ -403,17 +470,29 @@ function mkRows(){
   else out.sort((a,b)=>{const x=by(a),y=by(b);if(x==null&&y==null)return b.last-a.last;if(x==null)return 1;if(y==null)return-1;return y-x||b.last-a.last});
   return mkCur=out;
 }
+function renderHero(){
+  if(!MK)return;
+  $('#heroDate').textContent="Prezzi dall'archivio comune, aggiornati il "+fmtDate(MK.updated);
+  let top=MK.cards.filter(r=>r[6]!=null&&r[7]).map(r=>({r,d:r[6]-r[7]})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,3);
+  const moved=top.length===3;if(!moved)top=MK.cards.filter(r=>r[6]!=null).slice(0,3).map(r=>({r,d:null}));
+  $('#fanCap').textContent=moved?'Le tre carte che si sono mosse di più in euro nell\'ultimo giorno':'Le carte più care oggi';
+  const order=[top[1],top[0],top[2]].filter(Boolean);
+  $('#fan').querySelectorAll('.pc').forEach((a,i)=>{const x=order[i];if(!x){a.hidden=true;return}const r=x.r;
+    a.href=mkUrl(r);a.target='_blank';a.rel='noopener';a.setAttribute('aria-label',r[1]+', '+eur(r[6]/100));
+    const t=x.d==null?'':(x.d>0?'up':'down');
+    a.innerHTML=(/^[0-9a-f-]{36}$/.test(r[0])?'<img alt="" loading="eager" src="'+esc(API+'/cards/'+r[0]+'?format=image&version=normal')+'">':'')+
+      '<span class="tag '+t+'">'+(x.d==null?esc(eur(r[6]/100)):esc(eurTxt(x.d/100))+'<small>'+esc(eur(r[6]/100))+'</small>')+'</span>'});
+}
 function renderMk(){
   if(!MK)return;
   const foil=$('#mkF').value==='f',o=foil?10:6;
-  $('#mkDate').textContent="Prezzi dall'archivio comune, aggiornati il "+fmtDate(MK.updated);
   const rows=mkRows();
   if(!rows.length){$('#mkList').innerHTML='<div class="empty">Nessuna carta per questi filtri.</div>';return}
   const have=new Set(D.cards.map(c=>c.id+(c.foil?'|f':'')));
   const ch=(r,k)=>{const l=r[o],b=r[o+k];if(l==null||!b)return'<td class="flat">—</td>';const d=(l-b)/100,p=(l-b)/b*100;return'<td class="'+cls(p)+'">'+vc(p,d)+'</td>'};
-  $('#mkList').innerHTML='<p class="note" style="margin:0 0 8px">'+rows.length.toLocaleString(LOC())+' carte</p><div class="scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
+  $('#mkList').innerHTML='<p class="count">'+rows.length.toLocaleString(LOC())+' carte</p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
     rows.slice(0,mkShown).map((x,i)=>{const r=x.r;
-      return'<tr><td class="name"><a href="'+esc(mkUrl(r))+'" target="_blank" rel="noopener" data-pv="'+esc(r[0])+'">'+esc(r[1])+'</a>'+(foil?' <span class="sample">foil</span>':'')+'<small>'+esc(MK.sets[r[2]]||'')+' · '+esc(r[2])+' #'+esc(r[3])+'</small></td><td>'+esc(eur(x.last/100))+'</td>'+ch(r,1)+ch(r,2)+ch(r,3)+
+      return'<tr><td class="name"><a href="'+esc(mkUrl(r))+'" target="_blank" rel="noopener" data-pv="'+esc(r[0])+'">'+esc(r[1])+'</a>'+(foil?' <span class="foil">foil</span>':'')+'<small><span class="set">'+esc(r[2])+'</span>'+esc(MK.sets[r[2]]||'')+' #'+esc(r[3])+'</small></td><td>'+esc(eur(x.last/100))+'</td>'+ch(r,1)+ch(r,2)+ch(r,3)+
       '<td><span class="spw" data-sp="'+esc(r[0])+'"><svg class="sp" aria-hidden="true"></svg></span></td><td>'+
       (have.has(r[0]+(foil?'|f':''))?'<span class="msg" style="color:var(--mute)">Già nella lista</span>':'<button class="x" data-follow="'+i+'">Segui</button>')+'</td></tr>'}).join('')+'</tbody></table></div>'+
     (rows.length>mkShown?'<div class="more"><button data-mkmore="1">Mostra altre 50 ('+(rows.length-mkShown).toLocaleString(LOC())+' rimaste)</button></div>':'');
@@ -686,6 +765,7 @@ function days(s){
   return'<div class="days">'+out.join('')+'</div>'+(v.length<2?'<p class="note">Le variazioni compaiono dal secondo giorno registrato.</p>':'');
 }
 function render(){
+  document.querySelector('.sum').hidden=!D.cards.length;
   const all=D.cards.map((c,i)=>({c,i,...stats(c)}));
   const f=$('#qFilter').value.trim().toLowerCase(),g=$('#selGrp').value;
   const lo=parseFloat($('#pLo').value),hi=parseFloat($('#pHi').value);
@@ -706,9 +786,9 @@ function render(){
   if(!rows.length){$('#list').innerHTML='<div class="empty">Nessuna carta corrisponde ai filtri.</div>';return}
   const page=list.slice(0,shown);
   const arrow=k=>sortKey===k||(k==='d1'&&sortKey==='m1')?(sortDir<0?' ↓':' ↑'):'';
-  $('#list').innerHTML='<div class="scroll"><table class="stack"><thead><tr><th data-k="name">Carta'+arrow('name')+'</th><th>Copie</th><th data-k="price">Prezzo'+arrow('price')+'</th><th>Avvisami sotto €</th><th data-k="d1">1 giorno'+arrow('d1')+'</th><th data-k="d7">7 giorni'+arrow('d7')+'</th><th data-k="d30">30 giorni'+arrow('d30')+'</th><th>Andamento</th><th></th><th></th></tr></thead><tbody>'+
+  $('#list').innerHTML='<div class="sheet scroll"><table class="stack"><thead><tr><th data-k="name">Carta'+arrow('name')+'</th><th>Copie</th><th data-k="price">Prezzo'+arrow('price')+'</th><th>Avvisami sotto €</th><th data-k="d1">1 giorno'+arrow('d1')+'</th><th data-k="d7">7 giorni'+arrow('d7')+'</th><th data-k="d30">30 giorni'+arrow('d30')+'</th><th>Andamento</th><th></th><th></th></tr></thead><tbody>'+
     page.map(r=>{const c=r.c;const link=/^https:\/\//.test(c.cm)?'<a href="'+esc(cleanCm(c.cm))+'" target="_blank" rel="noopener" data-pv="'+esc(c.id)+'">'+esc(c.name)+'</a>':esc(c.name);
-      return'<tr><td class="name">'+link+(c.foil?' <span class="sample">foil</span>':'')+'<small>'+esc(c.setName)+' · '+esc(c.set)+' #'+esc(c.cn)+(gs(c).length?' · '+esc(gs(c).join(', ')):'')+'</small></td>'+
+      return'<tr><td class="name">'+link+(c.foil?' <span class="foil">foil</span>':'')+'<small><span class="set">'+esc(c.set)+'</span>'+esc(c.setName)+' #'+esc(c.cn)+(gs(c).length?', '+esc(gs(c).join(', ')):'')+'</small></td>'+
       '<td><input class="q" type="number" min="1" value="'+esc(c.qty||1)+'" data-i="'+r.i+'" aria-label="Copie di '+esc(c.name)+'"></td>'+
       '<td>'+esc(eur(r.last))+(c.target>0&&r.last!=null&&r.last<=c.target?' <span class="sample">sotto obiettivo</span>':'')+'</td><td><input class="q t" type="number" min="0" step="0.01" value="'+esc(c.target||'')+'" data-i="'+r.i+'" aria-label="Prezzo obiettivo di '+esc(c.name)+'" style="width:90px"></td>'+'<td class="'+cls(r.d1)+'">'+vc(r.d1,r.e1)+'</td><td class="'+cls(r.d7)+'">'+vc(r.d7,r.e7)+'</td><td class="'+cls(r.d30)+'">'+vc(r.d30,r.e30)+'</td>'+
       '<td>'+spark(r.s)+'</td><td><button class="dd" data-day="'+esc(keyOf(c))+'" aria-expanded="'+open_.has(keyOf(c))+'">Giorno per giorno</button></td><td><button class="x" data-del="'+r.i+'" aria-label="Togli '+esc(c.name)+'">Togli</button></td></tr>'+(open_.has(keyOf(c))?'<tr class="det"><td colspan="10">'+days(r.s)+'</td></tr>':'')}).join('')+'</tbody></table></div>'+
