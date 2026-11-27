@@ -36,6 +36,12 @@ jobs:
           market = json.loads(urllib.request.urlopen("https://zannabianca19.github.io/mtg-Price-tracker/data/market.json", timeout=120).read())
           cm = {r[0]: r for r in market["cards"]}   # scryfall id -> riga (6 = tendenza normale, 10 = foil, centesimi)
           EXP = ["Mint", "Near Mint", "Slightly Played"]
+          def cents(p):
+              v = p.get("price_cents")
+              if v is None: v = (p.get("price") or {}).get("cents")
+              return v
+          def cur(p):
+              return p.get("price_currency") or (p.get("price") or {}).get("currency")
           first = True
           for code in ["lea", "2xm", "mh3", "cmm", "ltr", "blb"]:
               e = bycode.get(code)
@@ -49,13 +55,13 @@ jobs:
               for bid, lst in prods.items():
                   bid = int(bid)
                   if first and lst:
-                      p = dict(lst[0]); p.pop("user", None); p.pop("uploaded_images", None)
-                      print("esempio offerta:", json.dumps(p)[:900]); first = False
+                      p = dict(lst[0]); p.pop("user", None); p.pop("uploaded_images", None); p.pop("description", None)
+                      print("esempio offerta:", json.dumps({k: v for k, v in p.items() if k not in ("properties_hash", "expansion")})[:700]); first = False
                   for p in lst:
                       ph = p.get("properties_hash") or {}
-                      conds[ph.get("condition")] += 1; langs[ph.get("mtg_language")] += 1; curr[p.get("price_currency")] += 1
+                      conds[ph.get("condition")] += 1; langs[ph.get("mtg_language")] += 1; curr[cur(p)] += 1
                   for foil in (False, True):
-                      ex = sorted(p["price_cents"] for p in lst
+                      ex = sorted(cents(p) for p in lst
                                   if (p.get("properties_hash") or {}).get("condition") in EXP
                                   and (p.get("properties_hash") or {}).get("mtg_language") == "en"
                                   and bool((p.get("properties_hash") or {}).get("mtg_foil")) == foil)
