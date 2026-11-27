@@ -8,6 +8,8 @@ Ogni giorno:
   4. calcola le classifiche di chi sale e chi scende (1, 7, 30 giorni) in movers.json;
   4b. aggiunge dal listino pubblico di Cardmarket (price guide) la media vendite a 7 giorni
       e il prezzo più basso in vendita del giorno;
+  4c. aggiunge da CardTrader (API, con il token nel segreto CARDTRADER_TOKEN) il prezzo delle copie
+      EX o meglio: media delle 3 offerte in inglese più economiche;
   5. scrive market.json: tutte le carte da almeno 1 € con prezzo e prezzi di 1, 7 e 30 giorni prima,
      per la pagina iniziale del sito.
 
@@ -26,7 +28,13 @@ CM_PREFIX = "https://www.cardmarket.com/en/Magic/Products"
 PRICE_GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json"
 # Serie salvate per ogni edizione: e/f = prezzo di tendenza normale/foil (Scryfall),
 # s/t = media delle vendite a 7 giorni normale/foil (listino pubblico di Cardmarket).
-SERIES = ("e", "f", "s", "t")
+SERIES = ("e", "f", "s", "t", "x", "y")
+# x/y = prezzo "EX o meglio" su CardTrader, normale/foil: media delle 3 offerte più economiche
+# in inglese, condizione Mint, Near Mint o Slightly Played (l'Excellent di Cardmarket).
+CT_API = "https://api.cardtrader.com/api/v2"
+CT_MIN = 500             # CardTrader solo per le espansioni con carte da almeno 5 € (tendenza)
+CT_GOOD = ("Mint", "Near Mint", "Slightly Played")
+CT_BUDGET = 25 * 60      # secondi massimi per CardTrader: oltre, si tiene quello che c'è
 FORMATS = ["commander", "duel", "modern", "legacy", "vintage", "pauper", "pioneer", "standard"]
 HEAD = {"User-Agent": "CardmarketPriceArchive/1.0 (GitHub Actions; daily, once a day)", "Accept": "application/json"}
 SHARDS = [f"{i:02x}" for i in range(256)]
@@ -166,6 +174,86 @@ def read_price_guide():
         return {}
 
 
+def ct_get(path, token, tries=5):
+    """Una chiamata all'API di CardTrader, con le attese che l'API chiede (429 e 503 con Retry-After)."""
+    for k in range(tries):
+        req = urllib.request.Request(CT_API + path, headers={
+            "Authorization": "Bearer " + token, "Accept": "application/json",
+            "User-Agent": "mtg-price-tracker (archivio giornaliero, una volta al giorno)"})
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 503):
+                time.sleep(min(60, float(e.headers.get("Retry-After") or 2 * (k + 1))))
+                continue
+            raise
+        except Exception:
+            time.sleep(3 * (k + 1))
+    raise RuntimeError("CardTrader non risponde: " + path)
+
+
+def read_cardtrader(token, cards):
+    """cards: {scryfall_id: (set, cardmarket_id, tendenza normale, tendenza foil)}.
+    Restituisce {scryfall_id: {"x", "y", "xn", "yn", "ct"}} con i prezzi in centesimi."""
+    if not token:
+        print("CardTrader: nessun token (segreto CARDTRADER_TOKEN), salto.")
+        return {}
+    t0 = time.time()
+    try:
+        exps = ct_get("/expansions", token)
+    except Exception as e:
+        print("CardTrader non disponibile oggi:", e)
+        return {}
+    wanted = {st.lower() for st, _, n, f in cards.values() if max(n or 0, f or 0) >= CT_MIN}
+    exps = [e for e in exps if e.get("game_id") == 1 and (e.get("code") or "").lower() in wanted]
+    out, skipped, done = {}, 0, 0
+    for e in exps:
+        if time.time() - t0 > CT_BUDGET:
+            print(f"CardTrader: tempo finito dopo {done} espansioni su {len(exps)}.")
+            break
+        try:
+            bps = ct_get(f"/blueprints/export?expansion_id={e['id']}", token)
+            prods = ct_get(f"/marketplace/products?expansion_id={e['id']}&language=en", token)
+        except Exception as err:
+            print("CardTrader, espansione saltata:", e.get("code"), err)
+            continue
+        done += 1
+        bp = {b["id"]: b for b in bps if b.get("scryfall_id")}
+        for bid, lst in prods.items():
+            b = bp.get(int(bid))
+            if not b or b["scryfall_id"] not in cards:
+                continue
+            sid = b["scryfall_id"]
+            st, cmid, tn, tf = cards[sid]
+            cmids = b.get("card_market_ids") or []
+            if cmid and cmids and cmid not in cmids:   # carta diversa con lo stesso id Scryfall: meglio niente
+                skipped += 1
+                continue
+            rec = {"ct": b["id"]}
+            for key, foil, trend in (("x", False, tn), ("y", True, tf)):
+                ok = sorted((p.get("price") or {}).get("cents") for p in lst
+                            if (p.get("properties_hash") or {}).get("condition") in CT_GOOD
+                            and bool((p.get("properties_hash") or {}).get("mtg_foil")) == foil
+                            and (p.get("properties_hash") or {}).get("mtg_language", "en") == "en"
+                            and not (p.get("properties_hash") or {}).get("signed")
+                            and not (p.get("properties_hash") or {}).get("altered")
+                            and not p.get("graded") and (p.get("bundle_size") or 1) == 1
+                            and (p.get("price") or {}).get("currency") == "EUR"
+                            and (p.get("price") or {}).get("cents"))
+                if not ok:
+                    continue
+                v = round(sum(ok[:3]) / len(ok[:3]))
+                if trend and trend >= 100 and not (0.25 <= v / trend <= 15):   # quasi certamente un'altra versione
+                    skipped += 1
+                    continue
+                rec[key], rec[key + "n"] = v, len(ok)
+            if "x" in rec or "y" in rec:
+                out[sid] = rec
+    print(f"CardTrader: {done} espansioni in {time.time() - t0:.0f} s, prezzo EX+ per {len(out)} edizioni, {skipped} scartate.")
+    return out
+
+
 def latest_bulk():
     resp = json.loads(http("https://api.scryfall.com/bulk-data"))
     items = resp.get("data", []) if isinstance(resp, dict) else resp
@@ -197,6 +285,11 @@ def main():
     if a.guide:
         with open(a.guide, encoding="utf-8") as f:
             pg = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil"))) for it in json.load(f)["priceGuides"]}
+    ctcards = {cid: (info[cid][1], c.get("cm"), c.get("e"), c.get("f")) for cid, c in cur.items() if cid in info}
+    ct = read_cardtrader(os.environ.get("CARDTRADER_TOKEN", "").strip(), ctcards)
+    for cid, r in ct.items():
+        cur[cid]["x"], cur[cid]["y"] = r.get("x"), r.get("y")
+        cur[cid]["ctn"] = [r.get("xn"), r.get("yn"), r["ct"]]
     linked = 0
     for cid, c in cur.items():
         s7, t7, lo, lf = pg.get(c.pop("cm", None), (None, None, None, None))
@@ -248,14 +341,17 @@ def main():
                 rec[k] = enc(ser[k])
         if now.get("lo"):
             rec["lo"] = now["lo"]
+        if now.get("ctn"):
+            rec["ctn"] = now["ctn"]
         shard_data[cid[:2]][cid] = rec
         if cid in info and max(ne[-1] or 0, nf[-1] or 0) >= MARKET_MIN:
             nm, st, sn, cn, mask, cm = info[cid]
             set_names[st] = sn
             row = [cid, nm, st, cn, mask, cm[len(CM_PREFIX):] if cm.startswith(CM_PREFIX) else cm]
-            for arr in (ne, nf, ser["s"], ser["t"]):
+            for arr in (ne, nf, ser["s"], ser["t"], ser["x"], ser["y"]):
                 row.append(arr[-1])
                 row.extend(arr[bases[w]] if bases[w] is not None else None for w in (1, 7, 30))
+            row.extend(now.get("ctn") or [None, None, None])
             market.append(row)
         if cid in info:
             for fin, arr in (("n", ne), ("f", nf)):
@@ -283,6 +379,8 @@ def main():
                     sr[k] = enc(v)
             if "lo" in rec:
                 sr["lo"] = rec["lo"]
+            if "ctn" in rec:
+                sr["ctn"] = rec["ctn"]
             if "e" in sr or "f" in sr:
                 sr.setdefault("e", "")
                 short[cid] = sr
@@ -305,7 +403,10 @@ def main():
                    "fields": ["id", "name", "set", "cn", "legal", "cm", "price", "base1", "base7", "base30",
                               "foil", "foilBase1", "foilBase7", "foilBase30",
                               "sales7", "sales7Base1", "sales7Base7", "sales7Base30",
-                              "foilSales7", "foilSales7Base1", "foilSales7Base7", "foilSales7Base30"], "cards": market},
+                              "foilSales7", "foilSales7Base1", "foilSales7Base7", "foilSales7Base30",
+                              "exCT", "exCTBase1", "exCTBase7", "exCTBase30",
+                              "foilExCT", "foilExCTBase1", "foilExCTBase7", "foilExCTBase30",
+                              "exCTOffers", "foilExCTOffers", "ctBlueprint"], "cards": market},
                   f, separators=(",", ":"), ensure_ascii=False)
     print(f"market.json: {len(market)} carte da almeno {MARKET_MIN / 100:.0f} €")
     n_cards = sum(len(d) for d in shard_data.values())
