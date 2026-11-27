@@ -1,0 +1,56 @@
+name: Prova One Piece (temporaneo)
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/prova-onepiece.yml"]
+permissions:
+  contents: read
+jobs:
+  prova:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Esplora i dati
+        shell: python
+        env:
+          CT: ${{ secrets.CARDTRADER_TOKEN }}
+        run: |
+          import json, os, time, collections, urllib.request, urllib.error
+          def get(u, h=None):
+              r = urllib.request.urlopen(urllib.request.Request(u, headers=h or {"User-Agent": "mtg-price-tracker test"}), timeout=120)
+              return json.loads(r.read())
+          S3 = "https://downloads.s3.cardmarket.com/productCatalog"
+          print("== Cardmarket: cataloghi per gioco")
+          for n in range(1, 25):
+              for kind, url in (("singles", f"{S3}/productList/products_singles_{n}.json"), ("guide", f"{S3}/priceGuide/price_guide_{n}.json")):
+                  try:
+                      d = get(url)
+                      if kind == "singles":
+                          pr = d.get("products") or []
+                          print(f"gioco {n} singles: {len(pr)} prodotti, chiavi {list(d)[:5]}, esempio {json.dumps(pr[:1])[:350]}")
+                      else:
+                          print(f"gioco {n} guide: {len(d.get('priceGuides') or [])} prezzi")
+                  except urllib.error.HTTPError as e:
+                      pass
+                  except Exception as e:
+                      print(n, kind, "errore", e)
+          H = {"Authorization": "Bearer " + os.environ["CT"].strip(), "Accept": "application/json", "User-Agent": "mtg-price-tracker test"}
+          ct = lambda p: get("https://api.cardtrader.com/api/v2" + p, H)
+          print("\n== CardTrader One Piece (game 15)")
+          exps = [e for e in ct("/expansions") if e.get("game_id") == 15]
+          print("espansioni:", len(exps), [ (e["code"], e["name"]) for e in exps[:40]])
+          cats = ct("/categories?game_id=15")
+          for c in cats:
+              print("categoria", c["id"], c["name"], [ (p["name"], (p.get("possible_values") or [])[:8]) for p in c.get("properties", [])])
+          e = next((x for x in exps if x["code"].lower() in ("op01", "op05", "op09")), exps[0])
+          bps = ct(f"/blueprints/export?expansion_id={e['id']}")
+          print("\nblueprint di", e["code"], len(bps))
+          for b in bps[:6]:
+              print(json.dumps({k: b.get(k) for k in ("id", "name", "version", "category_id", "card_market_ids", "image_url")})[:300], json.dumps(b.get("fixed_properties") or b.get("properties_hash") or {})[:200])
+          prods = ct(f"/marketplace/products?expansion_id={e['id']}")
+          langs, conds, props = collections.Counter(), collections.Counter(), collections.Counter()
+          for bid, lst in prods.items():
+              for p in lst:
+                  ph = p.get("properties_hash") or {}
+                  for k, v in ph.items(): props[(k, str(v))] += 1
+          print("\nproprieta' delle offerte (top):", props.most_common(40))
