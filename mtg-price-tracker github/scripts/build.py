@@ -2,7 +2,7 @@
 """Archivio giornaliero dei prezzi Cardmarket (via Scryfall) per l'app.
 
 Ogni giorno:
-  1. rilegge lo storico già pubblicato (meta.json + 256 file h/XX.json);
+  1. rilegge lo storico già pubblicato (meta.json + 256 file a/XX.json + 256 file w/XX.json);
   2. scarica il bulk "default_cards" di Scryfall e prende i prezzi EUR e EUR foil di ogni edizione;
   3. aggiunge il giorno, tiene gli ultimi DAYS_KEEP giorni e riscrive i 256 file;
   4. calcola le classifiche di chi sale e chi scende (1, 7, 30 giorni) in movers.json;
@@ -10,6 +10,7 @@ Ogni giorno:
       e il prezzo più basso in vendita del giorno;
   4c. aggiunge da CardTrader (API, con il token nel segreto CARDTRADER_TOKEN) il prezzo delle copie
       EX o meglio: media delle 3 offerte in inglese più economiche;
+  4d. tiene uno storico settimanale permanente (w/): un valore a settimana per ogni carta, l'ultimo della settimana;
   5. scrive market.json: tutte le carte da almeno 1 € con prezzo e prezzi di 1, 7 e 30 giorni prima,
      per la pagina iniziale del sito.
 
@@ -31,6 +32,8 @@ PRICE_GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/pri
 SERIES = ("e", "f", "s", "t", "x", "y")
 # x/y = prezzo "EX o meglio" su CardTrader, normale/foil: media delle 3 offerte più economiche
 # in inglese, condizione Mint, Near Mint o Slightly Played (l'Excellent di Cardmarket).
+SHORT = ("s", "t", "x", "y")   # serie tenute solo CLIENT_DAYS giorni (bastano per 1/7/30 giorni)
+WEEKLY = ("e", "f")             # storico settimanale permanente: tendenza normale e foil
 CT_API = "https://api.cardtrader.com/api/v2"
 CT_MIN = 500             # CardTrader solo per le espansioni con carte da almeno 5 € (tendenza)
 CT_GOOD = ("Mint", "Near Mint", "Slightly Played")
@@ -64,10 +67,28 @@ def http(url, dest=None, tries=4):
     raise err
 
 
+def dec_right(s, n):
+    """Serie compatta (SHORT): contiene solo gli ultimi giorni, allineati alla fine."""
+    if not s:
+        return [None] * n
+    out = [int(x) if x else None for x in s.split(",")][-n:]
+    return [None] * (n - len(out)) + out
+
+
+def read_series(rec, k, n):
+    return dec_right(rec.get(k, ""), n) if k in SHORT else dec(rec.get(k, ""), n)
+
+
+def week_of(d):
+    """Il lunedì della settimana del giorno d (YYYY-MM-DD)."""
+    x = datetime.date.fromisoformat(d)
+    return (x - datetime.timedelta(days=x.weekday())).isoformat()
+
+
 def read_prev(prev):
-    """Restituisce (days, {id: (e_list, f_list)}) dallo storico pubblicato, o vuoto al primo giro."""
+    """Restituisce (days, {id: {serie: lista}}, weeks, {id: {serie: lista settimanale}}) dallo storico pubblicato."""
     if not prev:
-        return [], {}
+        return [], {}, [], {}
     remote = prev.startswith("http")
 
     def load(name):
@@ -81,9 +102,10 @@ def read_prev(prev):
     except (urllib.error.HTTPError, FileNotFoundError) as e:
         if isinstance(e, FileNotFoundError) or e.code == 404:
             print("Nessuno storico precedente: si parte da oggi.")
-            return [], {}
+            return [], {}, [], {}
         raise
-    days = meta["days"]
+    # "archiveDayList" = tutti i giorni dell'archivio completo; "days" sono solo quelli per l'app (35)
+    days = meta.get("archiveDayList") or meta["days"]
     hist = {}
     for sh in SHARDS:  # un errore qui ferma tutto: meglio non pubblicare che perdere lo storico
         try:
@@ -91,9 +113,14 @@ def read_prev(prev):
         except (urllib.error.HTTPError, FileNotFoundError):
             data = load(f"h/{sh}.json")
         for cid, v in data.items():
-            hist[cid] = {k: dec(v.get(k, ""), len(days)) for k in SERIES}
-    print(f"Storico precedente: {len(days)} giorni, {len(hist)} carte.")
-    return days, hist
+            hist[cid] = {k: read_series(v, k, len(days)) for k in SERIES}
+    weeks, wk = meta.get("weeks") or [], {}
+    if weeks:
+        for sh in SHARDS:
+            for cid, v in load(f"w/{sh}.json").items():
+                wk[cid] = {k: dec(v.get(k, ""), len(weeks)) for k in WEEKLY}
+    print(f"Storico precedente: {len(days)} giorni, {len(hist)} carte, {len(weeks)} settimane.")
+    return days, hist, weeks, wk
 
 
 def dec(s, n):
@@ -292,7 +319,7 @@ def main():
     a = ap.parse_args()
     today = a.today or datetime.datetime.now(datetime.timezone.utc).date().isoformat()
 
-    old_days, hist = read_prev(a.prev)
+    old_days, hist, old_weeks, wk = read_prev(a.prev)
     cur, info = read_bulk(a.bulk or latest_bulk())
     if len(cur) < 1000 and not a.bulk:
         sys.exit("Troppo pochi prezzi nel bulk: qualcosa non va, non pubblico.")
@@ -335,7 +362,34 @@ def main():
 
     os.makedirs(os.path.join(a.out, "h"), exist_ok=True)
     os.makedirs(os.path.join(a.out, "a"), exist_ok=True)
+    os.makedirs(os.path.join(a.out, "w"), exist_ok=True)
     cdays = days[-CLIENT_DAYS:]
+    # settimane: quelle già nello storico settimanale + quelle coperte dai giorni dell'archivio
+    day_week = [week_of(d) for d in days]
+    weeks = sorted(set(old_weeks) | set(day_week))
+    widx_old = {w: i for i, w in enumerate(old_weeks)}
+    weekly = {sh: {} for sh in SHARDS}
+
+    def week_series(cid, ser):
+        """Ultimo valore di ogni settimana dai giorni; per le settimane più vecchie resta quello già salvato."""
+        old, out = wk.get(cid, {}), {}
+        for k in WEEKLY:
+            last = {}
+            for d, v in zip(day_week, ser.get(k) or []):
+                if v is not None:
+                    last[d] = v
+            o = old.get(k, [])
+            arr = []
+            for w in weeks:
+                v = last.get(w)
+                if v is None:
+                    i = widx_old.get(w)
+                    v = o[i] if i is not None and i < len(o) else None
+                arr.append(v)
+            if any(v is not None for v in arr):
+                out[k] = enc(arr)
+        if out:
+            weekly[cid[:2]][cid] = out
     cut = len(days) - len(cdays)
     shard_data = {sh: {} for sh in SHARDS}
     market, set_names = [], {}
@@ -348,12 +402,14 @@ def main():
             arr.append(now.get(k))
             ser[k] = arr
         ne, nf = ser["e"], ser["f"]
+        week_series(cid, ser)
         if all(v is None for v in ne) and all(v is None for v in nf):
             continue
         rec = {"e": enc(ne)}
         for k in SERIES[1:]:
-            if any(v is not None for v in ser[k]):
-                rec[k] = enc(ser[k])
+            v = ser[k][-CLIENT_DAYS:] if k in SHORT else ser[k]   # le serie SHORT si salvano compatte
+            if any(x is not None for x in v):
+                rec[k] = enc(v)
         if now.get("lo"):
             rec["lo"] = now["lo"]
         if now.get("ctn"):
@@ -382,6 +438,15 @@ def main():
                     pct = (last - b) / b * 100
                     movers[f"{w}_{fin}_{'up' if pct > 0 else 'down'}"].append((pct, cid, last, b))
 
+    for cid in set(wk) - ids:   # carte sparite dai prezzi di oggi: lo storico settimanale resta
+        week_series(cid, {})
+    n_week = 0
+    for sh, data in weekly.items():
+        n_week += len(data)
+        with open(os.path.join(a.out, "w", f"{sh}.json"), "w", encoding="utf-8") as f:
+            json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
+    print(f"Storico settimanale: {len(weeks)} settimane, {n_week} carte.")
+
     for sh, data in shard_data.items():
         with open(os.path.join(a.out, "a", f"{sh}.json"), "w", encoding="utf-8") as f:
             json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
@@ -389,7 +454,7 @@ def main():
         for cid, rec in data.items():
             sr = {}
             for k in SERIES:
-                v = dec(rec.get(k, ""), len(days))[cut:]
+                v = read_series(rec, k, len(days))[cut:]
                 if any(x is not None for x in v):
                     sr[k] = enc(v)
             if "lo" in rec:
@@ -426,7 +491,7 @@ def main():
     print(f"market.json: {len(market)} carte da almeno {MARKET_MIN / 100:.0f} €")
     n_cards = sum(len(d) for d in shard_data.values())
     with open(os.path.join(a.out, "meta.json"), "w", encoding="utf-8") as f:
-        json.dump({"updated": today, "days": cdays, "archiveDays": len(days), "cards": n_cards, "source": "Scryfall bulk default_cards (Cardmarket trend price, EUR)"}, f)
+        json.dump({"updated": today, "days": cdays, "archiveDays": len(days), "archiveDayList": days, "weeks": weeks, "cards": n_cards, "source": "Scryfall bulk default_cards (Cardmarket trend price, EUR)"}, f)
     print(f"Fatto: {today}, {len(days)} giorni, {n_cards} carte, classifiche: " + ", ".join(f"{k}={len(v)}" for k, v in out_m.items()))
 
 

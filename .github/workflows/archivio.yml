@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write   # per la copia mensile (Release) e il piccolo commit che tiene vivo l'aggiornamento
   pages: write
   id-token: write
 
@@ -39,6 +39,30 @@ jobs:
 
       - name: Copia il sito
         run: cp -r "mtg-price-tracker github/site/." _site/
+
+      - name: Copia mensile permanente e attività nel repository
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true   # se fallisce, il sito si pubblica lo stesso
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="archivio-$(date -u +%Y-%m)"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Copia di $tag già presente."
+            exit 0
+          fi
+          file="archivio-$(date -u +%Y-%m-%d).tar.gz"
+          tar -czf "$file" -C _site data
+          gh release create "$tag" "$file" --title "Archivio prezzi $(date -u +%Y-%m)" \
+            --notes "Copia mensile automatica dell'archivio dei prezzi (cartella data/ del sito). Per ripristinarla: scompatta e pubblica la cartella data/."
+          # GitHub sospende gli aggiornamenti programmati dei repository pubblici senza attività per 60 giorni:
+          # un commit al mese lo evita. [skip ci] evita di far ripartire l'aggiornamento.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          date -u +%Y-%m-%d > "mtg-price-tracker github/ultima-copia-mensile.txt"
+          git add "mtg-price-tracker github/ultima-copia-mensile.txt"
+          git commit -m "Copia mensile dell'archivio $tag [skip ci]"
+          git push
 
       - name: Copia di sicurezza dei dati (14 giorni)
         uses: actions/upload-artifact@v4
