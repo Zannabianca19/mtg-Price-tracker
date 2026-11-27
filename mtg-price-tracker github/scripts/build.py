@@ -245,6 +245,9 @@ def main():
     for k, lst in movers.items():
         lst.sort(key=lambda x: -abs(x[0]))
         out_m[k] = [[cid, *info[cid][:4], last, b, info[cid][4], info[cid][5]] for _, cid, last, b in lst[:TOP]]
+        # stessa classifica ordinata per variazione in euro (una carta da 1000 € che sale del 5% conta piu' di una da 5 centesimi che triplica)
+        by_e = sorted(lst, key=lambda x: -abs(x[2] - x[3]))
+        out_m[k + "_e"] = [[cid, *info[cid][:4], last, b, info[cid][4], info[cid][5]] for _, cid, last, b in by_e[:TOP]]
     with open(os.path.join(a.out, "movers.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": today, "formats": FORMATS, "fields": ["id", "name", "set", "setName", "cn", "price", "base", "legal", "cm"], "lists": out_m},
                   f, separators=(",", ":"), ensure_ascii=False)
