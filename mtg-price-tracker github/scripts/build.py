@@ -39,13 +39,18 @@ GAMES = {
 GAME = dict(GAMES["mtg"], id="mtg")   # il gioco in lavorazione (lo sceglie --game)
 # Serie salvate per ogni edizione: e/f = prezzo di tendenza normale/foil (Scryfall),
 # s/t = media delle vendite a 7 giorni normale/foil (listino pubblico di Cardmarket).
-SERIES = ("e", "f", "s", "t", "x", "y", "d", "g", "m", "n")
+SERIES = ("e", "f", "s", "t", "x", "y", "d", "g", "m", "n", "u", "v", "k", "o", "p")
 # x/y = prezzo "EX o meglio" su CardTrader, normale/foil: media delle 3 offerte più economiche
 # in inglese, condizione Mint, Near Mint o Slightly Played (l'Excellent di Cardmarket).
 # d/g = media delle vendite del giorno su Cardmarket (normale/foil): da qui la mediana su 7 giorni,
 #       che ignora le giornate con una vendita fuori scala. m/n = l'offerta EX+ più economica su CardTrader (x/y).
-SHORT = ("s", "t", "x", "y", "d", "g", "m", "n")   # serie tenute solo CLIENT_DAYS giorni (bastano per 1/7/30 giorni)
-WEEKLY = ("e", "f")             # storico settimanale permanente: tendenza normale e foil
+SHORT = ("s", "t", "x", "y", "d", "g", "m", "n", "u", "v", "k", "o", "p")   # serie tenute solo CLIENT_DAYS giorni (bastano per 1/7/30 giorni)
+# u/v = prezzo negli Stati Uniti (TCGplayer, centesimi di dollaro) normale/foil, k = Magic Online (centesimi di tix),
+# o/p = quante offerte EX+ ci sono su CardTrader (x/y): servono per studiare se anticipano i prezzi europei.
+# Non servono al sito: restano solo nell'archivio (a/: ultimi 35 giorni; w/: una volta a settimana, per sempre),
+# non nei file che scarica l'app (h/).
+NO_CLIENT = ("u", "v", "k", "o", "p")
+WEEKLY = ("e", "f", "u", "v", "o")   # storico settimanale permanente
 CT_API = "https://api.cardtrader.com/api/v2"
 CT_MIN = 500             # CardTrader solo per le espansioni con carte da almeno 5 € (tendenza)
 CT_GOOD = ("Mint", "Near Mint", "Slightly Played")
@@ -202,18 +207,31 @@ def iter_cards(path):
             yield from ijson.items(f, "item")
 
 
+UPCOMING, OLDNAMES = {}, set()   # ristampe annunciate: versioni non ancora uscite di carte che esistono già
+
+
 def read_bulk(path):
     cur, info = {}, {}
+    today = datetime.date.today().isoformat()
     if True:
         for c in iter_cards(path):
             if "paper" not in (c.get("games") or []):
                 continue
+            if c.get("set_type") not in ("token", "memorabilia", "minigame") and not c.get("oversized"):
+                rel, nm = c.get("released_at") or "", c.get("name", "")
+                if rel > today:
+                    u = UPCOMING.get(nm)
+                    if not u or rel < u[2]:
+                        UPCOMING[nm] = [(c.get("set") or "").upper(), c.get("set_name", ""), rel]
+                elif rel:
+                    OLDNAMES.add(nm)
             pr = c.get("prices") or {}
             e, fo = cents(pr.get("eur")), cents(pr.get("eur_foil"))
             if e is None and fo is None:
                 continue
             cid = c["id"]
-            cur[cid] = {"e": e, "f": fo, "cm": c.get("cardmarket_id")}
+            cur[cid] = {"e": e, "f": fo, "cm": c.get("cardmarket_id"),
+                        "u": cents(pr.get("usd")), "v": cents(pr.get("usd_foil")), "k": cents(pr.get("tix"))}
             lg = c.get("legalities") or {}
             mask = sum(1 << i for i, fm in enumerate(FORMATS) if lg.get(fm) == "legal")
             cm = (c.get("purchase_uris") or {}).get("cardmarket", "")
@@ -396,7 +414,7 @@ def read_generic(token, guide):
             if tr is None and x is None and y is None:
                 continue
             cid = f"{GAME['id']}-{b['id']}"
-            cur[cid] = {"e": tr, "f": tr, "s": a7, "t": a7, "x": x, "y": y, "d": a1, "g": a1, "m": xm, "n": ym, "ctn": [xn or None, yn or None, b["id"]]}
+            cur[cid] = {"e": tr, "f": tr, "s": a7, "t": a7, "x": x, "y": y, "d": a1, "g": a1, "m": xm, "n": ym, "o": xn or None, "p": yn or None, "ctn": [xn or None, yn or None, b["id"]]}
             if lo is not None:
                 cur[cid]["lo"] = [lo, lo]
             info[cid] = [b.get("name", "") + (f" ({ver})" if ver else ""), (e.get("code") or "").upper(), e.get("name", ""),
@@ -412,7 +430,7 @@ def read_generic(token, guide):
 def restore(prev_game, out):
     """Ripubblica i dati di ieri di un gioco (quando l'aggiornamento di oggi non riesce)."""
     meta = json.loads(http(prev_game + "/meta.json"))
-    names = ["meta.json", "market.json", "movers.json", "catalog.json", "names.json"] + [f"{d}/{sh}.json" for d in ("a", "h") for sh in SHARDS]
+    names = ["meta.json", "market.json", "movers.json", "catalog.json", "names.json", "reprints.json"] + [f"{d}/{sh}.json" for d in ("a", "h") for sh in SHARDS]
     if meta.get("weeks"):
         names += [f"w/{sh}.json" for sh in SHARDS]
     for n in names:
@@ -493,6 +511,7 @@ def read_mtg(a, cur_only=False):
     for cid, r in ct.items():
         cur[cid]["x"], cur[cid]["y"], cur[cid]["m"], cur[cid]["n"] = r.get("x"), r.get("y"), r.get("xm"), r.get("ym")
         cur[cid]["ctn"] = [r.get("xn"), r.get("yn"), r["ct"]]
+        cur[cid]["o"], cur[cid]["p"] = r.get("xn"), r.get("yn")
     linked = 0
     for cid, c in cur.items():
         s7, t7, lo, lf, d1, g1 = pg.get(c.pop("cm", None), (None,) * 6)
@@ -660,6 +679,8 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
         for cid, rec in data.items():
             sr = {}
             for k in SERIES:
+                if k in NO_CLIENT:
+                    continue
                 v = read_series(rec, k, len(days))[cut:]
                 if any(x is not None for x in v):
                     sr[k] = enc(v)
@@ -704,6 +725,11 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
         print(f"catalog.json: {len(CATALOG)} carte.")
     if GAME["id"] == "mtg":
         write_names(a.out, today, cur, info)
+        # ristampe annunciate: il nome ha già versioni uscite e una nuova in arrivo (di solito il prezzo scende)
+        rp = {nm: v for nm, v in sorted(UPCOMING.items()) if nm in OLDNAMES}
+        with open(os.path.join(a.out, "reprints.json"), "w", encoding="utf-8") as f:
+            json.dump({"updated": today, "fields": ["set", "setName", "released"], "cards": rp}, f, separators=(",", ":"), ensure_ascii=False)
+        print(f"reprints.json: {len(rp)} carte con una ristampa in arrivo.")
     n_cards = sum(len(d) for d in shard_data.values())
     with open(os.path.join(a.out, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": today, "days": cdays, "archiveDays": len(days), "archiveDayList": days, "weeks": weeks, "cards": n_cards, "source": "Scryfall bulk default_cards (Cardmarket trend price, EUR)"}, f)
