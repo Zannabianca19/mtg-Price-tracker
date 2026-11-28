@@ -122,6 +122,7 @@ td.name small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
 .lo{display:block;font-size:12px;color:var(--mute);margin-top:2px}
 .lo.deal{color:var(--up);font-weight:600}
 .lo.warn{color:var(--down);cursor:help}
+details.val{margin:0 0 10px}details.val summary{cursor:pointer;font-weight:600;padding:6px 0}
 .lo a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--mute)}.lo a:hover{color:var(--blue);border-color:var(--blue)}
 td.name a.ex{display:inline-block;margin-left:10px;font-size:12px;font-weight:600;color:var(--blue);text-decoration:none;border:1px solid var(--line);border-radius:3px;padding:1px 6px;vertical-align:1px}
 td.name a.ex:hover{border-color:var(--blue);text-decoration:none}
@@ -234,6 +235,7 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
     <div><dt>Cards up / down</dt><dd id="sUpDown">—</dd></div>
     <div><dt>Last update</dt><dd id="sDate">—</dd></div>
   </dl>
+  <details id="valBox" class="val"><summary>Value over time</summary><div id="valChart"></div></details>
   <div class="movers" id="movers"></div>
   <div class="bar" id="bar">
     <button class="main" id="bUpd">Update prices</button>
@@ -365,6 +367,11 @@ RECS.push(...[["Quanto vale oggi ogni carta One Piece su Cardmarket", "What ever
 RECS.push(...[["Nome o codice della carta, es. Roronoa Zoro o OP01-001", "Card name or code, e.g. Roronoa Zoro or OP01-001", "Nom ou code de la carte, ex. Roronoa Zoro ou OP01-001", "Nombre o código de la carta, p. ej. Roronoa Zoro u OP01-001", "Kartenname oder Code, z. B. Roronoa Zoro oder OP01-001"], ["Versione", "Version", "Version", "Versión", "Version"], ["Stampa", "Printing", "Impression", "Impresión", "Druck"], ["La versione normale", "The normal version", "La version normale", "La versión normal", "Die normale Version"], ["La versione più cara (es. Alternate Art)", "The most expensive version (e.g. Alternate Art)", "La version la plus chère (ex. Alternate Art)", "La versión más cara (p. ej. Alternate Art)", "Die teuerste Version (z. B. Alternate Art)"], ["Nome del gruppo, es. mazzo Zoro (facoltativo)", "Group name, e.g. Zoro deck (optional)", "Nom du groupe, ex. deck Zoro (facultatif)", "Nombre del grupo, p. ej. mazo Zoro (opcional)", "Gruppenname, z. B. Zoro-Deck (optional)"], ["Una carta per riga: il codice (OP01-001), il nome o tutti e due, con o senza quantità (4x o 4). Le righe che iniziano con # aprono un nuovo mazzo, come per Magic.", "One card per line: the code (OP01-001), the name, or both, with or without quantity (4x or 4). Lines starting with # start a new deck, as for Magic.", "Une carte par ligne : le code (OP01-001), le nom ou les deux, avec ou sans quantité (4x ou 4). Les lignes qui commencent par # ouvrent un nouveau deck, comme pour Magic.", "Una carta por línea: el código (OP01-001), el nombre o ambos, con o sin cantidad (4x o 4). Las líneas que empiezan por # abren un mazo nuevo, como en Magic.", "Eine Karte pro Zeile: der Code (OP01-001), der Name oder beides, mit oder ohne Anzahl (4x oder 4). Zeilen mit # beginnen ein neues Deck, wie bei Magic."], ["Elenco delle carte non disponibile.", "Card list not available.", "Liste des cartes indisponible.", "Lista de cartas no disponible.", "Kartenliste nicht verfügbar."], ["Nessuna carta trovata.", "No card found.", "Aucune carte trouvée.", "No se ha encontrado ninguna carta.", "Keine Karte gefunden."], [" è già nella lista.", " is already in the list.", " est déjà dans la liste.", " ya está en la lista.", " ist schon in der Liste."], [" aggiunta.", " added.", " ajoutée.", " añadida.", " hinzugefügt."], ["Non ho trovato carte nel testo.", "I found no cards in the text.", "Je n'ai trouvé aucune carte dans le texte.", "No he encontrado cartas en el texto.", "Ich habe im Text keine Karten gefunden."]]);
 RECS.push(...[["Occasioni di oggi: copie EX+ appena messe in vendita su CardTrader sotto il solito prezzo", "Today's finds: EX+ copies just listed on CardTrader below the usual price", "Trouvailles du jour : exemplaires EX+ tout juste mis en vente sur CardTrader sous le prix habituel", "Hallazgos de hoy: copias EX+ recién puestas a la venta en CardTrader por debajo del precio habitual", "Fundstücke des Tages: EX+-Exemplare, die gerade auf CardTrader unter dem üblichen Preis eingestellt wurden"],
   ["di solito ", "usually ", "d'habitude ", "normalmente ", "sonst "],
+  ["Valore nel tempo", "Value over time", "Valeur dans le temps", "Valor en el tiempo", "Wert im Zeitverlauf"],
+  ["In 7 giorni", "In 7 days", "En 7 jours", "En 7 días", "In 7 Tagen"],
+  ["In 30 giorni", "In 30 days", "En 30 jours", "En 30 días", "In 30 Tagen"],
+  ["Dal primo giorno registrato", "Since the first recorded day", "Depuis le premier jour enregistré", "Desde el primer día registrado", "Seit dem ersten gespeicherten Tag"],
+  ["Il valore di oggi delle carte che vedi, con le copie che hai adesso, calcolato ai prezzi di ogni giorno. Se cambi gruppo o filtri, cambia anche il grafico.", "The value of the cards you see, with the copies you have now, at each day's prices. If you change group or filters, the chart changes too.", "La valeur des cartes affichées, avec les exemplaires que vous avez maintenant, aux prix de chaque jour. Si vous changez de groupe ou de filtres, le graphique change aussi.", "El valor de las cartas que ves, con las copias que tienes ahora, a los precios de cada día. Si cambias de grupo o de filtros, el gráfico también cambia.", "Der Wert der angezeigten Karten mit deinen jetzigen Exemplaren, zu den Preisen jedes Tages. Wenn du Gruppe oder Filter änderst, ändert sich auch das Diagramm."],
   ["Costo mazzo", "Deck cost", "Coût du deck", "Coste del mazo", "Deckkosten"],
   ["Quanto costa un mazzo", "How much a deck costs", "Combien coûte un deck", "Cuánto cuesta un mazo", "Was ein Deck kostet"],
   ["Incolla una lista: per ogni carta il sito trova la versione più economica, normale o foil, e ti dice dove conviene comprarla, su Cardmarket o su CardTrader. Le carte col bordo oro, quelle giganti e le altre non da torneo sono escluse.", "Paste a list: for every card the site finds its cheapest printing, normal or foil, and tells you where it costs less to buy it, on Cardmarket or on CardTrader. Gold-bordered, oversized and other non-tournament cards are left out.", "Collez une liste : pour chaque carte, le site trouve l'édition la moins chère, normale ou foil, et vous dit où l'acheter le moins cher, sur Cardmarket ou sur CardTrader. Les cartes à bord doré, surdimensionnées et autres cartes non autorisées en tournoi sont exclues.", "Pega una lista: para cada carta el sitio encuentra la edición más barata, normal o foil, y te dice dónde comprarla más barata, en Cardmarket o en CardTrader. Se excluyen las cartas de borde dorado, las gigantes y otras no válidas para torneo.", "Füge eine Liste ein: Für jede Karte findet die Seite die günstigste Ausgabe, normal oder Foil, und sagt dir, wo sie günstiger ist, auf Cardmarket oder auf CardTrader. Karten mit Goldrand, Übergrößen und andere nicht turnierlegale Karten werden ausgelassen."],
@@ -1074,6 +1081,22 @@ function days(s){
     return'<div class="day"><span style="text-align:left">'+esc(fmtDate(e[0]))+'</span><i style="width:'+(e[1]/mx*100).toFixed(1)+'%"></i><span>'+esc(eur(e[1]))+'</span><span class="'+cls(pc)+'">'+esc(pctTxt(pc))+'</span><span class="'+cls(pc)+'">'+esc(eurTxt(ed))+'</span></div>'}).reverse();
   return bigChart(s)+'<div class="days">'+out.join('')+'</div>'+(v.length<2?'<p class="note">Le variazioni compaiono dal secondo giorno registrato.</p>':'');
 }
+// valore nel tempo delle carte che vedi: le copie di oggi, ai prezzi di ogni giorno.
+// Se una carta non ha il prezzo di un giorno si usa quello del giorno prima (o, prima del suo primo giorno, il primo),
+// così il grafico si muove solo per i prezzi e non perché hai aggiunto carte.
+function valChart(rows){
+  const box=$('#valBox');box.hidden=!rows.length;if(!box.open||!rows.length)return;
+  const all=new Set();const ser=[];
+  for(const r of rows){const h=r.c.h||{},ks=Object.keys(h).filter(k=>h[k]!=null).sort();if(!ks.length)continue;ks.forEach(k=>all.add(k));ser.push({h,ks,q:r.c.qty||1})}
+  const ds=[...all].sort().slice(-90);
+  const v=ds.map(d=>{let t=0;for(const x of ser){let p=x.h[d];if(p==null){let b=null;for(const k of x.ks){if(k<=d)b=k;else break}p=x.h[b??x.ks[0]]}t+=p*x.q}return[d,Math.round(t*100)/100]});
+  const last=v.length?v[v.length-1][1]:0;
+  const at=n=>{if(v.length<2)return null;const lim=new Date(Date.parse(v[v.length-1][0])-n*864e5).toISOString().slice(0,10);let b=null;for(const e of v)if(e[0]<=lim)b=e;return b?last-b[1]:null};
+  const chip=(l,d)=>d==null?'':'<span class="chip"><span>'+l+'</span> <span class="'+cls(d)+'">'+esc(eurTxt(d))+'</span></span>';
+  $('#valChart').innerHTML=bigChart(v)+'<div class="movers">'+chip('In 7 giorni',at(7))+chip('In 30 giorni',at(30))+chip('Dal primo giorno registrato',v.length>1?last-v[0][1]:null)+'</div>'+
+    '<p class="note">Il valore di oggi delle carte che vedi, con le copie che hai adesso, calcolato ai prezzi di ogni giorno. Se cambi gruppo o filtri, cambia anche il grafico.</p>';
+}
+$('#valBox').addEventListener('toggle',()=>{if($('#valBox').open)render()});
 function render(){
   document.querySelector('.sum').hidden=!D.cards.length;
   const all=D.cards.map((c,i)=>({c,i,...stats(c)}));
@@ -1085,7 +1108,7 @@ function render(){
   $('#lTot').textContent=g||f||!isNaN(lo)||!isNaN(hi)?'Valore di quello che vedi':'Valore totale della lista';
   $('#sTot').textContent=eur(tot);
   const dt=tot-prev;$('#sDelta').textContent=rows.length?(dt>=0?'+':'')+eur(dt):'—';$('#sDelta').className=dt>0.004?'up':dt<-0.004?'down':'';
-  $('#sUpDown').textContent=up+' / '+down;$('#sDate').textContent=fmtDate(D.lastUpdate);
+  $('#sUpDown').textContent=up+' / '+down;valChart(rows);$('#sDate').textContent=fmtDate(D.lastUpdate);
   const mv=rows.filter(r=>r.e1!=null&&Math.abs(r.e1)>=0.01).sort((a,b)=>Math.abs(b.e1)-Math.abs(a.e1)).slice(0,5);
   $('#movers').innerHTML=mv.map(r=>'<span class="chip">'+esc(r.c.name)+' <span class="'+cls(r.d1)+'">'+esc(eurTxt(r.e1))+' ('+esc(pctTxt(r.d1))+')</span></span>').join('');
   {const b=$('#bDelGrp');b.hidden=!g||g==='-';b.textContent=g.startsWith('S:')?'Togli l\'insieme':'Togli il gruppo'}
