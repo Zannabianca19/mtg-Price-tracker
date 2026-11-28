@@ -318,6 +318,7 @@ def read_cardtrader(token, cards):
 
 
 CT_IMG = "https://cardtrader.com/uploads/blueprints/image/"
+CATALOG, CATALOG_SETS = [], {}   # tutte le carte dei giochi senza Scryfall (per cercare e importare dal sito)
 
 
 def ct_ex(lst, langkey, lang, foil=None):
@@ -344,6 +345,7 @@ def read_generic(token, guide):
     t0 = time.time()
     exps = [e for e in ct_get("/expansions", token) if e.get("game_id") == GAME["ct"]]
     cur, info, done = {}, {}, 0
+    CATALOG.clear()
     l1, l2 = GAME["langs"]
     langkey = {15: "onepiece_language"}.get(GAME["ct"], "language")
     for e in exps:
@@ -361,6 +363,12 @@ def read_generic(token, guide):
             if b.get("category_id") not in GAME["ctSingles"]:
                 continue
             props = b.get("fixed_properties") or b.get("properties_hash") or {}
+            ver = (b.get("version") or "").strip()
+            img = b.get("image_url") or ""
+            # catalogo completo (anche carte senza prezzo): serve al sito per cercare e importare liste
+            CATALOG.append([f"{GAME['id']}-{b['id']}", b.get("name", "") + (f" ({ver})" if ver else ""), (e.get("code") or "").upper(),
+                            props.get("collector_number") or "", img[len(CT_IMG):] if img.startswith(CT_IMG) else img])
+            CATALOG_SETS[(e.get("code") or "").upper()] = e.get("name", "")
             lst = prods.get(str(b["id"])) or []
             cmid = next((c for c in (b.get("card_market_ids") or []) if c in guide), None)
             tr, a7, lo = guide.get(cmid, (None, None, None))
@@ -369,8 +377,6 @@ def read_generic(token, guide):
             if tr is None and x is None and y is None:
                 continue
             cid = f"{GAME['id']}-{b['id']}"
-            ver = (b.get("version") or "").strip()
-            img = b.get("image_url") or ""
             cur[cid] = {"e": tr, "f": tr, "s": a7, "t": a7, "x": x, "y": y, "ctn": [xn or None, yn or None, b["id"]]}
             if lo is not None:
                 cur[cid]["lo"] = [lo, lo]
@@ -387,7 +393,7 @@ def read_generic(token, guide):
 def restore(prev_game, out):
     """Ripubblica i dati di ieri di un gioco (quando l'aggiornamento di oggi non riesce)."""
     meta = json.loads(http(prev_game + "/meta.json"))
-    names = ["meta.json", "market.json", "movers.json"] + [f"{d}/{sh}.json" for d in ("a", "h") for sh in SHARDS]
+    names = ["meta.json", "market.json", "movers.json", "catalog.json"] + [f"{d}/{sh}.json" for d in ("a", "h") for sh in SHARDS]
     if meta.get("weeks"):
         names += [f"w/{sh}.json" for sh in SHARDS]
     for n in names:
@@ -629,6 +635,12 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
                               "exCTOffers", "foilExCTOffers", "ctBlueprint", "image"], "imgPrefix": CT_IMG, "cards": market},
                   f, separators=(",", ":"), ensure_ascii=False)
     print(f"market.json: {len(market)} carte da almeno {MARKET_MIN / 100:.0f} €")
+    if CATALOG:
+        with open(os.path.join(a.out, "catalog.json"), "w", encoding="utf-8") as f:
+            json.dump({"updated": today, "game": GAME["id"], "imgPrefix": CT_IMG, "sets": CATALOG_SETS,
+                       "fields": ["id", "name", "set", "cn", "image"], "cards": CATALOG},
+                      f, separators=(",", ":"), ensure_ascii=False)
+        print(f"catalog.json: {len(CATALOG)} carte.")
     n_cards = sum(len(d) for d in shard_data.values())
     with open(os.path.join(a.out, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": today, "days": cdays, "archiveDays": len(days), "archiveDayList": days, "weeks": weeks, "cards": n_cards, "source": "Scryfall bulk default_cards (Cardmarket trend price, EUR)"}, f)

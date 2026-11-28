@@ -155,6 +155,12 @@ summary{min-height:48px;display:flex;align-items:center;font-weight:700;cursor:p
 .pane{display:grid;gap:10px;padding-bottom:16px}
 tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px 14px}
 .days{display:grid;gap:4px;max-width:640px}
+.gres{display:grid;gap:6px;max-height:420px;overflow:auto}
+.gres .gr{display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0}
+.gres .gr img{width:40px;border-radius:3px;flex:none}
+.gres .gr div{flex:1;min-width:0}
+.gres .gr small{display:block;color:var(--mute);font-size:13px}
+.gres .gr button{min-height:34px;padding:0 10px;font-size:14px}
 .day{display:grid;grid-template-columns:5.5em minmax(0,1fr) 6.5em 5.5em 6.5em;gap:10px;align-items:center;font-size:14px}
 .day i{display:block;height:8px;border-radius:2px;background:var(--blue);opacity:.75}
 .day span{text-align:right;white-space:nowrap}
@@ -229,6 +235,17 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
   </div>
   <p class="note" id="opNote" hidden>For One Piece, add cards with «Follow» in «All cards». Finding printings and importing decks work only with Magic for now.</p>
   <div class="tools" id="tools">
+    <details open id="dAddG" hidden><summary>Add a card</summary><div class="pane">
+      <input id="gQ" type="search" placeholder="Card name or code, e.g. Roronoa Zoro or OP01-001" autocomplete="off">
+      <div id="gRes" class="gres"></div>
+    </div></details>
+    <details id="dImpG" hidden><summary>Import a list (deck or collection)</summary><div class="pane">
+      <textarea id="gList" placeholder="4xOP01-001&#10;4 Roronoa Zoro (OP01-025)&#10;1 Nami"></textarea>
+      <div class="row"><label class="chk">Version <select id="gLang"><option value="n">English</option><option value="f">Japanese</option></select></label>
+      <label class="chk">Printing <select id="gPick"><option value="base">The normal version</option><option value="max">The most expensive version (e.g. Alternate Art)</option></select></label></div>
+      <input id="gGroup" placeholder="Group name, e.g. Zoro deck (optional)">
+      <div class="row"><button class="main" id="bImpG">Import</button><span class="note">One card per line: the code (OP01-001), the name, or both, with or without quantity (4x or 4). Lines starting with # start a new deck, as for Magic.</span></div>
+    </div></details>
     <details open id="dAdd"><summary>Add a card</summary><div class="pane">
       <div class="row"><input id="qName" list="sugg" placeholder="Card name in English, e.g. Sol Ring" autocomplete="off"><datalist id="sugg"></datalist><button id="bFind">Find printings</button></div>
       <select id="selPrint" hidden></select>
@@ -336,6 +353,7 @@ RECS.push(...[["EX o meglio (CardTrader)", "EX or better (CardTrader)", "EX ou m
 RECS.push(...[["Gioco", "Game", "Jeu", "Juego", "Spiel"]]);
 RECS.push(...[["Inglese", "English", "Anglais", "Inglés", "Englisch"], ["Giapponese", "Japanese", "Japonais", "Japonés", "Japanisch"]]);
 RECS.push(...[["Quanto vale oggi ogni carta One Piece su Cardmarket", "What every One Piece card is worth on Cardmarket today", "Ce que vaut chaque carte One Piece sur Cardmarket aujourd'hui", "Cuánto vale hoy cada carta de One Piece en Cardmarket", "Was jede One-Piece-Karte heute auf Cardmarket wert ist"], ["Per One Piece le carte si aggiungono con «Segui» in «Tutte le carte». La ricerca delle edizioni e l'importazione dei mazzi per ora funzionano solo con Magic.", "For One Piece, add cards with «Follow» in «All cards». Finding printings and importing decks work only with Magic for now.", "Pour One Piece, ajoutez les cartes avec «Suivre» dans «Toutes les cartes». La recherche d'éditions et l'import de decks ne marchent pour l'instant qu'avec Magic.", "Para One Piece, añade las cartas con «Seguir» en «Todas las cartas». La búsqueda de ediciones y la importación de mazos por ahora solo funcionan con Magic.", "Für One Piece fügst du Karten mit «Folgen» in «Alle Karten» hinzu. Drucke suchen und Decks importieren geht vorerst nur mit Magic."], ["Quanto vale oggi ogni carta Magic su Cardmarket", "What every Magic card is worth on Cardmarket today", "Ce que vaut chaque carte Magic sur Cardmarket aujourd'hui", "Cuánto vale hoy cada carta de Magic en Cardmarket", "Was jede Magic-Karte heute auf Cardmarket wert ist"]]);
+RECS.push(...[["Nome o codice della carta, es. Roronoa Zoro o OP01-001", "Card name or code, e.g. Roronoa Zoro or OP01-001", "Nom ou code de la carte, ex. Roronoa Zoro ou OP01-001", "Nombre o código de la carta, p. ej. Roronoa Zoro u OP01-001", "Kartenname oder Code, z. B. Roronoa Zoro oder OP01-001"], ["Versione", "Version", "Version", "Versión", "Version"], ["Stampa", "Printing", "Impression", "Impresión", "Druck"], ["La versione normale", "The normal version", "La version normale", "La versión normal", "Die normale Version"], ["La versione più cara (es. Alternate Art)", "The most expensive version (e.g. Alternate Art)", "La version la plus chère (ex. Alternate Art)", "La versión más cara (p. ej. Alternate Art)", "Die teuerste Version (z. B. Alternate Art)"], ["Nome del gruppo, es. mazzo Zoro (facoltativo)", "Group name, e.g. Zoro deck (optional)", "Nom du groupe, ex. deck Zoro (facultatif)", "Nombre del grupo, p. ej. mazo Zoro (opcional)", "Gruppenname, z. B. Zoro-Deck (optional)"], ["Una carta per riga: il codice (OP01-001), il nome o tutti e due, con o senza quantità (4x o 4). Le righe che iniziano con # aprono un nuovo mazzo, come per Magic.", "One card per line: the code (OP01-001), the name, or both, with or without quantity (4x or 4). Lines starting with # start a new deck, as for Magic.", "Une carte par ligne : le code (OP01-001), le nom ou les deux, avec ou sans quantité (4x ou 4). Les lignes qui commencent par # ouvrent un nouveau deck, comme pour Magic.", "Una carta por línea: el código (OP01-001), el nombre o ambos, con o sin cantidad (4x o 4). Las líneas que empiezan por # abren un mazo nuevo, como en Magic.", "Eine Karte pro Zeile: der Code (OP01-001), der Name oder beides, mit oder ohne Anzahl (4x oder 4). Zeilen mit # beginnen ein neues Deck, wie bei Magic."], ["Elenco delle carte non disponibile.", "Card list not available.", "Liste des cartes indisponible.", "Lista de cartas no disponible.", "Kartenliste nicht verfügbar."], ["Nessuna carta trovata.", "No card found.", "Aucune carte trouvée.", "No se ha encontrado ninguna carta.", "Keine Karte gefunden."], [" è già nella lista.", " is already in the list.", " est déjà dans la liste.", " ya está en la lista.", " ist schon in der Liste."], [" aggiunta.", " added.", " ajoutée.", " añadida.", " hinzugefügt."], ["Non ho trovato carte nel testo.", "I found no cards in the text.", "Je n'ai trouvé aucune carte dans le texte.", "No he encontrado cartas en el texto.", "Ich habe im Text keine Karten gefunden."]]);
 const DICT={};for(const r of RECS){DICT[r[1]]=DICT[r[1]]||r;DICT[r[0]]=r}
 const ITK=RECS.map(r=>r[0]);
 let LANG='en';try{const l=localStorage.getItem('pc-lang');if(LANGS[l])LANG=l}catch{}
@@ -517,10 +535,92 @@ async function update(manual){
 
 function gameUI(){
   const mtg=GAME==='mtg';
-  for(const id of['dAdd','dImp','dGrp'])$('#'+id).hidden=!mtg;
-  $('#opNote').hidden=mtg;
+  for(const id of['dAdd','dImp'])$('#'+id).hidden=!mtg;
+  for(const id of['dAddG','dImpG'])$('#'+id).hidden=mtg;
+  $('#opNote').hidden=true;$('#gRes').innerHTML='';$('#gQ').value='';
   $('#h1t').textContent=mtg?'Quanto vale oggi ogni carta Magic su Cardmarket':'Quanto vale oggi ogni carta '+(GAMES.find(g=>g.id===GAME)||{}).name+' su Cardmarket';
 }
+
+/* ---------- aggiungi e importa per i giochi senza Scryfall (catalogo data/<gioco>/catalog.json) ---------- */
+const CAT=new Map();
+async function loadCat(g){
+  if(CAT.has(g))return CAT.get(g);
+  const pr=fetch(DATA(g)+'catalog.json',{cache:'no-cache'}).then(q=>q.ok?q.json():null).then(c=>{
+    if(!c)return null;
+    const base=n=>n.replace(/\s*\([^)]*\)\s*$/,'').trim().toLowerCase();
+    c.byCode=new Map();c.byName=new Map();
+    for(const r of c.cards){const code=(r[3]||'').toUpperCase().replace(/[A-Z]+$/,'').replace(/[^A-Z0-9-]/g,'');
+      if(code){if(!c.byCode.has(code))c.byCode.set(code,[]);c.byCode.get(code).push(r)}
+      const k=base(r[1]);if(!c.byName.has(k))c.byName.set(k,[]);c.byName.get(k).push(r)}
+    c.base=base;return c}).catch(()=>null);
+  CAT.set(g,pr);return pr;
+}
+const catImg=(c,r)=>r[4]?(/^https?:/.test(r[4])?r[4]:c.imgPrefix+r[4]):'';
+const catPrice=r=>{const m=MK&&MK.byId&&MK.byId.get(r[0]);return m?m[6]:null};
+function catPick(c,rows,code,mode){
+  if(!rows||!rows.length)return null;
+  if(mode==='max'){let best=null,bv=-1;for(const r of rows){const v=catPrice(r)||0;if(v>bv){bv=v;best=r}}return best}
+  // versione normale: stesso codice senza lettere finali, nell'espansione del codice, senza versione tra parentesi
+  const set=code&&code.split('-')[0];
+  const sc=r=>(code&&(r[3]||'').toUpperCase()===code?4:0)+(set&&r[2]===set?2:0)+(/\([^)]*\)\s*$/.test(r[1])?0:1);
+  return rows.slice().sort((a,b)=>sc(b)-sc(a))[0];
+}
+function catCard(c,r,foil,qty){
+  const m=MK&&MK.byId&&MK.byId.get(r[0]);
+  return {id:r[0],name:r[1],set:r[2],setName:c.sets[r[2]]||'',cn:r[3],foil,qty,cm:m?mkUrl(m):'',h:{},manual:true,game:GAME};
+}
+let gqT=0;
+$('#gQ').addEventListener('input',()=>{clearTimeout(gqT);gqT=setTimeout(gSearch,200)});
+async function gSearch(){
+  const q=$('#gQ').value.trim().toLowerCase(),box=$('#gRes');if(q.length<2){box.innerHTML='';return}
+  const c=await loadCat(GAME);if(!c){box.innerHTML='<p class="note">Elenco delle carte non disponibile.</p>';return}
+  const code=q.toUpperCase().replace(/\s+/g,'');
+  const hits=c.cards.filter(r=>(r[3]||'').toUpperCase().startsWith(code)||r[1].toLowerCase().includes(q)).slice(0,30);
+  if(!hits.length){box.innerHTML='<p class="note">Nessuna carta trovata.</p>';return}
+  const v=(MK&&MK.game&&MK.game.variants)||['Normale','Foil'];
+  box.innerHTML=hits.map((r,i)=>{const pr=catPrice(r);const im=catImg(c,r);
+    return'<div class="gr">'+(im?'<img alt="" loading="lazy" src="'+esc(im)+'">':'')+'<div><strong>'+esc(r[1])+'</strong><small><span class="set">'+esc(r[2])+'</span>'+esc(c.sets[r[2]]||'')+' #'+esc(r[3])+(pr?', '+esc(eur(pr/100)):'')+'</small></div><button data-gadd="'+i+'|0">+ '+esc(v[0])+'</button><button data-gadd="'+i+'|1">+ '+esc(v[1])+'</button></div>'}).join('');
+  box.dataset.hits=JSON.stringify(hits.map(r=>r[0]));
+}
+$('#gRes').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-gadd]');if(!b||!live)return;const c=await loadCat(GAME);if(!c)return;
+  const[i,f]=b.dataset.gadd.split('|');const id=JSON.parse($('#gRes').dataset.hits||'[]')[+i];const r=c.cards.find(x=>x[0]===id);if(!r)return;
+  const foil=f==='1';if(D.cards.some(x=>x.id===r[0]&&x.foil===foil)){say(r[1]+' è già nella lista.');return}
+  const card=catCard(c,r,foil,1);D.cards.push(card);await srvSync([card]);await save();render();renderMk();say(r[1]+' aggiunta.');
+});
+$('#bImpG').onclick=async()=>{
+  if(!live||busy)return;const c=await loadCat(GAME);if(!c)return say('Elenco delle carte non disponibile.');
+  const foil=$('#gLang').value==='f',mode=$('#gPick').value,group=$('#gGroup').value.trim().slice(0,60);
+  const lines=$('#gList').value.split(/\r?\n/);const secs=new Set();let sec=null;const want=[];
+  for(let l of lines){l=l.replace(/^\s*\/\/.*$/,'').trim();
+    const h=l.match(/^#+\s*(.+)$/);if(h){sec=h[1].trim().slice(0,60);secs.add(sec);continue}
+    if(!l||/^(sideboard|deck|leader|mainboard)\b/i.test(l))continue;
+    let q=1;const m=l.match(/^(\d+)\s*x?\s*(.+)$/i);if(m){q=+m[1];l=m[2].trim()}
+    const cm=l.match(/\b([A-Z]{1,4}\d{0,3}-\d{2,3})([A-Za-z]*)\b/i);
+    const code=cm?cm[1].toUpperCase():null;const name=l.replace(/\(?\b[A-Z]{1,4}\d{0,3}-\d{2,3}[A-Za-z]*\b\)?/gi,'').trim();
+    want.push({q,code,name,sec})}
+  if(!want.length)return say('Non ho trovato carte nel testo.');
+  busy=true;$('#bImpG').disabled=true;
+  try{
+    const added=[],missing=[];
+    for(const w of want){
+      let rows=w.code?c.byCode.get(w.code):null;
+      if((!rows||!rows.length)&&w.name)rows=c.byName.get(c.base(w.name));
+      const r=catPick(c,rows,w.code,mode);
+      if(!r){missing.push(w.code||w.name);continue}
+      const tags=w.sec?[w.sec]:(group?[group]:[]);
+      let ex=D.cards.find(x=>x.id===r[0]&&x.foil===foil);
+      if(!ex){ex=catCard(c,r,foil,w.sec?1:w.q);if(!tags.length)ex.manual=true;else delete ex.manual;D.cards.push(ex);added.push(ex)}
+      else if(!w.sec&&added.includes(ex))ex.qty=(ex.qty||1)+w.q;   // stessa carta su più righe della lista
+      gs(ex);for(const g of tags)if(!ex.groups.includes(g))ex.groups.push(g);
+    }
+    await srvSync(added);
+    if(secs.size&&group){D.sets=D.sets||{};D.sets[group]=[...new Set([...(D.sets[group]||[]),...secs])]}
+    await save();renderGroups(secs.size&&group?'S:'+group:(group||undefined));shown=50;render();renderMk();$('#gList').value='';
+    say((secs.size?secs.size+' mazzi, ':'')+added.length+' carte importate'+(missing.length?'; non trovate: '+missing.slice(0,8).join(', '):'')+'.');
+  }catch(e){say('Importazione non riuscita: '+e.message)}
+  $('#bImpG').disabled=false;busy=false;
+};
 /* ---------- scelta del gioco ---------- */
 {
   const sel=$('#selGame');
@@ -545,8 +645,8 @@ const mkUrl=r=>!r[5]?'https://www.cardmarket.com/en/Magic/Products/Search?search
 async function mkInit(){
   if(!SRV)return;
   try{const q=await fetch(DATA()+'market.json',{cache:'no-cache'});if(!q.ok)return;MK=await q.json()}catch{return}
-  {const v=MK.game&&MK.game.variants;if(v){const o=$('#mkF').options;o[0].textContent=v[0];o[1].textContent=v[1]}}
-  MKIMG.clear();for(const r of MK.cards){const u=imgOf(r);if(u)MKIMG.set(r[0],u)}
+  {const v=MK.game&&MK.game.variants;if(v){for(const id of['#mkF','#gLang']){const o=$(id).options;o[0].textContent=v[0];o[1].textContent=v[1]}}}
+  MKIMG.clear();MK.byId=new Map();for(const r of MK.cards){MK.byId.set(r[0],r);const u=imgOf(r);if(u)MKIMG.set(r[0],u)}
   $('#mkL').closest('label').hidden=!(MK.formats||[]).length;gameUI();
   if(!MK||!Array.isArray(MK.cards))return;
   MK.q=MK.cards.map(r=>(r[1]+' '+r[2]+' '+(MK.sets[r[2]]||'')).toLowerCase());

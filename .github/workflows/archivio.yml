@@ -2,7 +2,7 @@ name: Archivio prezzi e sito
 
 on:
   schedule:
-    - cron: "23 11 * * *"
+    - cron: "23 16 * * *"   # 17:23 in Italia, 18:23 con l'ora legale: dopo il listino Cardmarket del giorno
   workflow_dispatch:
   push:
     branches: [main]
