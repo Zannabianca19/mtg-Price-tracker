@@ -690,7 +690,7 @@ function mkRows(){
     const cmp=GAME==='mtg'||!foil,lo0=r[foil?35:34],tr=r[foil?10:6],lo=lo0&&tr?Math.min(lo0,tr):null,ex=r[foil?26:22],nx=r[foil?31:30],deal=cmp&&lo&&ex&&nx>=3?(lo-ex)/lo*100:null;
     if(s==='dl'&&!(deal>0&&lo>=200))continue;   // risparmio vero e carte da almeno 2 €
     // occasione di oggi: l'offerta EX+ più economica di oggi su CardTrader è molto sotto il livello solito dei giorni
-    // prima (mediana della media delle 3 più economiche), di almeno il 15% e 2 €, e costa meno anche su Cardmarket.
+    // prima (mediana delle offerte più economiche dei giorni prima), di almeno il 15% e 2 €, e costa meno anche su Cardmarket.
     let oc=null;
     if(s==='oc'){const mn=r[foil?39:38],us=r[foil?41:40];
       if(!(mn&&us&&us>=300&&mn<=us*0.85&&us-mn>=200))continue;
@@ -720,7 +720,7 @@ function renderMk(){
   if(!MK)return;
   const foil=$('#mkF').value==='f',P=$('#mkP').value,avg=P==='a',ctm=P==='x',o=(ctm?22:avg?14:6)+(foil?4:0);
   const rows=mkRows();mkSaveUrl();
-  if(!rows.length){$('#mkList').innerHTML='<div class="empty">'+($('#mkS').value==='oc'&&!MK.cards.some(r=>r.length>40)?'Le occasioni di oggi compaiono dal prossimo aggiornamento dei prezzi.':'Nessuna carta per questi filtri.')+'</div>';return}
+  if(!rows.length){$('#mkList').innerHTML='<div class="empty">'+($('#mkS').value==='oc'&&!MK.cards.some(r=>r[40]||r[41])?'Le occasioni di oggi compaiono dal prossimo aggiornamento dei prezzi.':'Nessuna carta per questi filtri.')+'</div>';return}
   const have=new Set(D.cards.map(c=>c.id+(c.foil?'|f':'')));
   const ch=(r,k)=>{const l=r[o],b=r[o+k];if(l==null||!b)return'<td class="flat">—</td>';const d=(l-b)/100,p=(l-b)/b*100;return'<td class="'+cls(p)+'">'+vc(p,d)+'</td>'};
   $('#mkList').innerHTML='<p class="count"><span>'+rows.length.toLocaleString(LOC())+' carte'+(avg?'<span>. Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.</span>':ctm?'<span><span>. Prezzi: media delle 3 offerte più economiche in inglese, condizione Mint, Near Mint o Slightly Played, su </span><a href="https://www.cardtrader.com/" target="_blank" rel="noopener">CardTrader</a>.</span>':'')+'</span> <button class="x share" data-share="1">Copia il link di questa ricerca</button></p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+

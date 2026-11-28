@@ -593,9 +593,10 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
             # mediana a 7 giorni della media giornaliera di Cardmarket (normale, foil)
             row.extend(median_last(ser[k]) for k in ("d", "g"))
             # offerta EX+ più economica oggi su CardTrader, e il livello solito dei giorni prima
-            # (mediana della media delle 3 più economiche): se oggi è molto più bassa, qualcuno l'ha appena messa in vendita
+            # (mediana delle offerte più economiche degli ultimi giorni, ne basta uno): se oggi è molto più bassa,
+            # qualcuno ha appena messo in vendita una copia a poco
             row.extend(ser[k][-1] for k in ("m", "n"))
-            row.extend(median_last(ser[k][:-1]) for k in ("x", "y"))
+            row.extend(median_last(ser[k][:-1], need=1) for k in ("m", "n"))
             market.append(row)
         if cid in info:
             for fin, arr in (("n", ne), ("f", nf)):
