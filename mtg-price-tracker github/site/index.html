@@ -666,13 +666,15 @@ async function mkInit(){
   $('#mk').hidden=false;renderMk();renderHero();
 }
 // tendenza forse gonfiata: la tendenza di Cardmarket è molto sopra la copia più economica in vendita e anche sopra
-// almeno un altro prezzo (media vendite a 7 giorni, mediana della media giornaliera, EX+ su CardTrader).
+// le copie EX+ su CardTrader (o, senza queste, della media vendite a 7 giorni / mediana della media giornaliera).
 // Succede quando una sola vendita fuori scala trascina la tendenza (es. Jace WWK foil a 569 € con copie EX da 100 €).
 function inflated(r,foil){
   if(!r||(GAME!=='mtg'&&foil))return false;   // dove la versione è la lingua, Cardmarket le mescola: non si confronta
-  const tr=r[foil?10:6],lo=r[foil?35:34];
+  const tr=r[foil?10:6],lo=r[foil?35:34],ex=r[foil?26:22],nx=r[foil?31:30],a7=r[foil?18:14],m1=r[foil?37:36];
   if(!(tr>=200&&lo&&tr>=lo*1.6))return false;
-  return[r[foil?18:14],r[foil?37:36],r[foil?26:22]].some(w=>w&&tr>=w*1.4);
+  // con almeno 2 offerte EX+ su CardTrader conta quello: la copia più economica può essere rovinata (es. Alpha)
+  if(ex&&nx>=2)return tr>=ex*1.5;
+  return!!(tr>=lo*2.5&&((a7&&tr>=a7*1.4)||(m1&&tr>=m1*1.4)));
 }
 const INFL='<small class="lo warn" title="La tendenza di Cardmarket è molto più alta delle copie in vendita: probabilmente l\'ha alzata una vendita fuori scala. Controlla le offerte prima di fidarti.">tendenza forse gonfiata</small>';
 function mkRows(){
