@@ -217,7 +217,8 @@ def read_bulk(path):
         for c in iter_cards(path):
             if "paper" not in (c.get("games") or []):
                 continue
-            if c.get("set_type") not in ("token", "memorabilia", "minigame") and not c.get("oversized"):
+            if (c.get("set_type") not in ("token", "memorabilia", "minigame") and not c.get("oversized")
+                    and "Basic Land" not in (c.get("type_line") or "")):   # le terre base si ristampano sempre
                 rel, nm = c.get("released_at") or "", c.get("name", "")
                 if rel > today:
                     u = UPCOMING.get(nm)
