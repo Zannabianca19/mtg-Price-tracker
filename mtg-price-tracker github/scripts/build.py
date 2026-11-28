@@ -47,7 +47,7 @@ WEEKLY = ("e", "f")             # storico settimanale permanente: tendenza norma
 CT_API = "https://api.cardtrader.com/api/v2"
 CT_MIN = 500             # CardTrader solo per le espansioni con carte da almeno 5 € (tendenza)
 CT_GOOD = ("Mint", "Near Mint", "Slightly Played")
-CT_BUDGET = 25 * 60      # secondi massimi per CardTrader: oltre, si tiene quello che c'è
+CT_BUDGET = 40 * 60      # secondi massimi per CardTrader per gioco: oltre, si tiene quello che c'è
 HEAD = {"User-Agent": "CardmarketPriceArchive/1.0 (GitHub Actions; daily, once a day)", "Accept": "application/json"}
 SHARDS = [f"{i:02x}" for i in range(256)]
 
