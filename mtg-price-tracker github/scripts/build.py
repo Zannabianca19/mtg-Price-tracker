@@ -569,6 +569,7 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
                 row.extend(arr[bases[w]] if bases[w] is not None else None for w in (1, 7, 30))
             row.extend(now.get("ctn") or [None, None, None])
             row.append(info[cid][6] if len(info[cid]) > 6 else None)   # immagine (giochi senza Scryfall)
+            row.extend(now.get("lo") or [None, None])   # copia più economica su Cardmarket oggi (normale, foil)
             market.append(row)
         if cid in info:
             for fin, arr in (("n", ne), ("f", nf)):
@@ -632,7 +633,7 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
                               "foilSales7", "foilSales7Base1", "foilSales7Base7", "foilSales7Base30",
                               "exCT", "exCTBase1", "exCTBase7", "exCTBase30",
                               "foilExCT", "foilExCTBase1", "foilExCTBase7", "foilExCTBase30",
-                              "exCTOffers", "foilExCTOffers", "ctBlueprint", "image"], "imgPrefix": CT_IMG, "cards": market},
+                              "exCTOffers", "foilExCTOffers", "ctBlueprint", "image", "cmLow", "foilCmLow"], "imgPrefix": CT_IMG, "cards": market},
                   f, separators=(",", ":"), ensure_ascii=False)
     print(f"market.json: {len(market)} carte da almeno {MARKET_MIN / 100:.0f} €")
     if CATALOG:
