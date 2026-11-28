@@ -251,7 +251,7 @@ def read_price_guide():
     try:
         pg = json.loads(http(PRICE_GUIDE.format(cm=GAME["cm"])))
         out = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil")),
-                                  pos(it.get("avg1")), pos(it.get("avg1-foil")))
+                                  pos(it.get("avg1")), pos(it.get("avg1-foil")), cents(it.get("trend")))
                for it in pg.get("priceGuides", []) if it.get("idProduct")}
         print(f"Listino Cardmarket del {pg.get('createdAt')}: {len(out)} prodotti.")
         return out
@@ -506,6 +506,35 @@ def main():
     build_archive(a, today, old_days, hist, old_weeks, wk, cur, info)
 
 
+PRODUCTS_NONSINGLES = "https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_{cm}.json"
+
+
+def read_sealed(pg, cur, info):
+    """Prodotti sigillati (buste, box, mazzi, Secret Lair...): nomi dall'elenco prodotti di Cardmarket, prezzi dal listino.
+    Id "cm-<idProduct>"; nel sito si distinguono dalle carte singole per questo prefisso. Se l'elenco non si scarica, niente sigillati."""
+    try:
+        prods = json.loads(http(PRODUCTS_NONSINGLES.format(cm=GAME["cm"])))
+        prods = prods.get("products") or prods.get("product") or []
+    except Exception as e:
+        print("Elenco dei sigillati non disponibile oggi:", e)
+        return
+    n = 0
+    for p in prods:
+        pid = p.get("idProduct")
+        g = pg.get(pid)
+        if not pid or not g or not g[6]:
+            continue
+        s7, _, lo, _, d1, _, tr = g
+        cat = re.sub(r"^Magic\s+", "", p.get("categoryName") or "Sealed").strip()
+        cid = f"cm-{pid}"
+        cur[cid] = {"e": tr, "f": None, "s": s7, "d": d1}
+        if lo:
+            cur[cid]["lo"] = [lo, None]
+        info[cid] = [p.get("name") or str(pid), cat, "", "", 0, f"{CM_PREFIX}?idProduct={pid}"]
+        n += 1
+    print(f"Sigillati: {n} prodotti con prezzo su {len(prods)} nell'elenco.")
+
+
 def read_mtg(a, cur_only=False):
     cur, info = read_bulk(a.bulk or latest_bulk())
     if len(cur) < 1000 and not a.bulk:
@@ -514,7 +543,7 @@ def read_mtg(a, cur_only=False):
     if a.guide:
         with open(a.guide, encoding="utf-8") as f:
             pg = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil")),
-                                  pos(it.get("avg1")), pos(it.get("avg1-foil"))) for it in json.load(f)["priceGuides"]}
+                                  pos(it.get("avg1")), pos(it.get("avg1-foil")), cents(it.get("trend"))) for it in json.load(f)["priceGuides"]}
     ctcards = {cid: (info[cid][1], c.get("cm"), c.get("e"), c.get("f")) for cid, c in cur.items() if cid in info}
     ct = read_cardtrader(os.environ.get("CARDTRADER_TOKEN", "").strip(), ctcards)
     for cid, r in ct.items():
@@ -523,7 +552,7 @@ def read_mtg(a, cur_only=False):
         cur[cid]["o"], cur[cid]["p"] = r.get("xn"), r.get("yn")
     linked = dropped = 0
     for cid, c in cur.items():
-        s7, t7, lo, lf, d1, g1 = pg.get(c.pop("cm", None), (None,) * 6)
+        s7, t7, lo, lf, d1, g1 = pg.get(c.pop("cm", None), (None,) * 7)[:6]
         c["s"], c["t"], c["d"], c["g"] = s7, t7, d1, g1
         if lo is not None or lf is not None:
             c["lo"] = [lo, lf]   # prezzo più basso in vendita oggi (normale, foil): solo il valore del giorno
@@ -536,6 +565,8 @@ def read_mtg(a, cur_only=False):
                 dropped += 1
         linked += s7 is not None or t7 is not None
     print(f"Media vendite 7 giorni collegata a {linked} edizioni; {dropped} prezzi EX+ scartati perché fuori mercato.")
+    if pg:
+        read_sealed(pg, cur, info)
     return cur, info
 
 
@@ -548,7 +579,7 @@ def write_names(out, today, cur, info):
     best = {}
     for cid, c in cur.items():
         inf = info.get(cid)
-        if not inf or NO_DECK.match(inf[1]) or re.search(r"Art Series|Oversized|World Championship|Token|Minigame", inf[2]):
+        if not inf or cid.startswith("cm-") or NO_DECK.match(inf[1]) or re.search(r"Art Series|Oversized|World Championship|Token|Minigame", inf[2]):
             continue
         nm = inf[0]
         b = best.setdefault(nm, [nm, None, None, None, 0, None, None, None])
