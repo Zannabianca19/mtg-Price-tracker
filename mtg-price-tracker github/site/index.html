@@ -122,7 +122,8 @@ td.name small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
 .lo{display:block;font-size:12px;color:var(--mute);margin-top:2px}
 .lo.deal{color:var(--up);font-weight:600}
 .lo.warn{color:var(--down);cursor:help}
-details.val{margin:0 0 10px}details.val summary{cursor:pointer;font-weight:600;padding:6px 0}
+details.val{margin:0 0 10px}
+.prh{font-size:15px;margin:14px 0 6px}table.prt tr.cur td{background:color-mix(in srgb,var(--blue) 10%,transparent)}details.val summary{cursor:pointer;font-weight:600;padding:6px 0}
 .lo a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--mute)}.lo a:hover{color:var(--blue);border-color:var(--blue)}
 td.name a.ex{display:inline-block;margin-left:10px;font-size:12px;font-weight:600;color:var(--blue);text-decoration:none;border:1px solid var(--line);border-radius:3px;padding:1px 6px;vertical-align:1px}
 td.name a.ex:hover{border-color:var(--blue);text-decoration:none}
@@ -367,6 +368,9 @@ RECS.push(...[["Quanto vale oggi ogni carta One Piece su Cardmarket", "What ever
 RECS.push(...[["Nome o codice della carta, es. Roronoa Zoro o OP01-001", "Card name or code, e.g. Roronoa Zoro or OP01-001", "Nom ou code de la carte, ex. Roronoa Zoro ou OP01-001", "Nombre o código de la carta, p. ej. Roronoa Zoro u OP01-001", "Kartenname oder Code, z. B. Roronoa Zoro oder OP01-001"], ["Versione", "Version", "Version", "Versión", "Version"], ["Stampa", "Printing", "Impression", "Impresión", "Druck"], ["La versione normale", "The normal version", "La version normale", "La versión normal", "Die normale Version"], ["La versione più cara (es. Alternate Art)", "The most expensive version (e.g. Alternate Art)", "La version la plus chère (ex. Alternate Art)", "La versión más cara (p. ej. Alternate Art)", "Die teuerste Version (z. B. Alternate Art)"], ["Nome del gruppo, es. mazzo Zoro (facoltativo)", "Group name, e.g. Zoro deck (optional)", "Nom du groupe, ex. deck Zoro (facultatif)", "Nombre del grupo, p. ej. mazo Zoro (opcional)", "Gruppenname, z. B. Zoro-Deck (optional)"], ["Una carta per riga: il codice (OP01-001), il nome o tutti e due, con o senza quantità (4x o 4). Le righe che iniziano con # aprono un nuovo mazzo, come per Magic.", "One card per line: the code (OP01-001), the name, or both, with or without quantity (4x or 4). Lines starting with # start a new deck, as for Magic.", "Une carte par ligne : le code (OP01-001), le nom ou les deux, avec ou sans quantité (4x ou 4). Les lignes qui commencent par # ouvrent un nouveau deck, comme pour Magic.", "Una carta por línea: el código (OP01-001), el nombre o ambos, con o sin cantidad (4x o 4). Las líneas que empiezan por # abren un mazo nuevo, como en Magic.", "Eine Karte pro Zeile: der Code (OP01-001), der Name oder beides, mit oder ohne Anzahl (4x oder 4). Zeilen mit # beginnen ein neues Deck, wie bei Magic."], ["Elenco delle carte non disponibile.", "Card list not available.", "Liste des cartes indisponible.", "Lista de cartas no disponible.", "Kartenliste nicht verfügbar."], ["Nessuna carta trovata.", "No card found.", "Aucune carte trouvée.", "No se ha encontrado ninguna carta.", "Keine Karte gefunden."], [" è già nella lista.", " is already in the list.", " est déjà dans la liste.", " ya está en la lista.", " ist schon in der Liste."], [" aggiunta.", " added.", " ajoutée.", " añadida.", " hinzugefügt."], ["Non ho trovato carte nel testo.", "I found no cards in the text.", "Je n'ai trouvé aucune carte dans le texte.", "No he encontrado cartas en el texto.", "Ich habe im Text keine Karten gefunden."]]);
 RECS.push(...[["Occasioni di oggi: copie EX+ appena messe in vendita su CardTrader sotto il solito prezzo", "Today's finds: EX+ copies just listed on CardTrader below the usual price", "Trouvailles du jour : exemplaires EX+ tout juste mis en vente sur CardTrader sous le prix habituel", "Hallazgos de hoy: copias EX+ recién puestas a la venta en CardTrader por debajo del precio habitual", "Fundstücke des Tages: EX+-Exemplare, die gerade auf CardTrader unter dem üblichen Preis eingestellt wurden"],
   ["di solito ", "usually ", "d'habitude ", "normalmente ", "sonst "],
+  ["Tutte le versioni di ", "All printings of ", "Toutes les éditions de ", "Todas las ediciones de ", "Alle Drucke von "],
+  ["EX+ su CardTrader", "EX+ on CardTrader", "EX+ sur CardTrader", "EX+ en CardTrader", "EX+ auf CardTrader"],
+  ["Solo le versioni che valgono almeno 1 €. Ordinate dalla più economica, ", "Only printings worth at least €1. Sorted from the cheapest, ", "Seulement les éditions valant au moins 1 €. Triées de la moins chère, ", "Solo las ediciones que valen al menos 1 €. Ordenadas de la más barata, ", "Nur Drucke ab 1 €. Sortiert ab dem günstigsten, "],
   ["Valore nel tempo", "Value over time", "Valeur dans le temps", "Valor en el tiempo", "Wert im Zeitverlauf"],
   ["In 7 giorni", "In 7 days", "En 7 jours", "En 7 días", "In 7 Tagen"],
   ["In 30 giorni", "In 30 days", "En 30 jours", "En 30 días", "In 30 Tagen"],
@@ -781,6 +785,17 @@ function renderHero(){
     a.innerHTML=(im?'<img alt="" loading="eager" src="'+esc(im)+'">':'')+
       '<span class="tag '+t+'">'+(x.d==null?esc(eur(r[6]/100)):esc(eurTxt(x.d/100))+'<small>'+esc(eur(r[6]/100))+'</small>')+'</span>'});
 }
+// tutte le versioni di una carta (da almeno 1 €, quelle che sono nell'elenco), per scegliere quale comprare
+function printsOf(r,foil){
+  if(!MK.byName){MK.byName=new Map();for(const x of MK.cards){const k=x[1];if(!MK.byName.has(k))MK.byName.set(k,[]);MK.byName.get(k).push(x)}}
+  const l=(MK.byName.get(r[1])||[]).slice();if(l.length<2)return'';
+  const o=foil?10:6;l.sort((a,b)=>(a[o]??1e12)-(b[o]??1e12));
+  const ch=x=>{const v=x[o],b=x[o+3];if(v==null||!b)return'<td class="flat">—</td>';const p=(v-b)/b*100;return'<td class="'+cls(p)+'">'+vc(p,(v-b)/100)+'</td>'};
+  const tf=GAME==='mtg'?['Normale','Foil']:((MK.game&&MK.game.variants)||['Normale','Foil']);
+  return'<h3 class="prh"><span>Tutte le versioni di </span><span translate="no">'+esc(r[1])+'</span></h3><div class="scroll"><table class="stack prt"><thead><tr><th>Edizione</th><th>'+esc(tf[0])+'</th><th>'+esc(tf[1])+'</th><th>EX+ su CardTrader</th><th>30 giorni</th></tr></thead><tbody>'+
+    l.map(x=>'<tr'+(x[0]===r[0]?' class="cur"':'')+'><td><a href="'+esc(mkUrl(x))+'" target="_blank" rel="noopener"><span class="set">'+esc(x[2])+'</span>'+esc(MK.sets[x[2]]||'')+' #'+esc(x[3])+'</a>'+(inflated(x,foil)?INFL:'')+'</td><td>'+esc(eur(x[6]==null?null:x[6]/100))+'</td><td>'+esc(eur(x[10]==null?null:x[10]/100))+'</td><td>'+(x[foil?26:22]!=null&&x[32]?'<a href="https://www.cardtrader.com/cards/'+(+x[32])+'" target="_blank" rel="noopener">'+esc(eur(x[foil?26:22]/100))+'</a>':'—')+'</td>'+ch(x)+'</tr>').join('')+
+    '</tbody></table></div><p class="note"><span>Solo le versioni che valgono almeno 1 €. Ordinate dalla più economica, </span>'+esc((foil?tf[1]:tf[0]).toLowerCase())+'.</p>';
+}
 function renderMk(){
   if(!MK)return;
   const foil=$('#mkF').value==='f',P=$('#mkP').value,avg=P==='a',ctm=P==='x',o=(ctm?22:avg?14:6)+(foil?4:0);
@@ -792,7 +807,7 @@ function renderMk(){
     rows.slice(0,mkShown).map((x,i)=>{const r=x.r;
       return'<tr><td class="name"><a href="'+esc(mkUrl(r))+'" target="_blank" rel="noopener" data-pv="'+esc(r[0])+'">'+esc(r[1])+'</a>'+(foil?(GAME==='mtg'?' <span class="foil">foil</span>':' <span class="sample">JP</span>'):'')+'<small><span class="set">'+esc(r[2])+'</span>'+esc(MK.sets[r[2]]||'')+' #'+esc(r[3])+exLink(mkUrl(r))+((ctm||x.oc)&&r[32]?ctLink(r[32],r[foil?31:30]):'')+'</small></td><td>'+esc(eur(x.last/100))+(P==='t'&&inflated(r,foil)?INFL:'')+($('#mkS').value==='dl'&&x.deal!=null?'<small class="lo deal">CardTrader EX+ '+esc(eur(x.ex/100))+'</small><small class="lo"><span>Cardmarket da </span>'+esc(eur(x.r[$('#mkF').value==='f'?35:34]/100))+' ('+esc(eurTxt(-x.save/100))+')</small>':'')+(x.oc?'<small class="lo deal">CardTrader EX+ '+esc(eur(x.oc.mn/100))+'</small><small class="lo"><span>di solito </span>'+esc(eur(x.oc.us/100))+' ('+esc(eurTxt(-x.oc.save/100))+')</small>'+(x.lo?'<small class="lo"><span>Cardmarket da </span>'+esc(eur(x.lo/100))+'</small>':''):'')+'</td>'+ch(r,1)+ch(r,2)+ch(r,3)+
       '<td><button class="spb" data-chart="'+esc(r[0])+'" aria-expanded="'+mkOpen.has(r[0])+'" title="Mostra il grafico"><span class="spw" data-sp="'+esc(r[0])+'"><svg class="sp" aria-hidden="true"></svg></span></button></td><td>'+
-      (have.has(r[0]+(foil?'|f':''))?'<span class="msg" style="color:var(--mute)">Già nella lista</span>':'<button class="x" data-follow="'+i+'">Segui</button>')+'</td></tr>'+(mkOpen.has(r[0])?'<tr class="det"><td colspan="7"><div data-big="'+esc(r[0])+'"><p class="note">Carico…</p></div></td></tr>':'')}).join('')+'</tbody></table></div>'+
+      (have.has(r[0]+(foil?'|f':''))?'<span class="msg" style="color:var(--mute)">Già nella lista</span>':'<button class="x" data-follow="'+i+'">Segui</button>')+'</td></tr>'+(mkOpen.has(r[0])?'<tr class="det"><td colspan="7"><div data-big="'+esc(r[0])+'"><p class="note">Carico…</p></div>'+printsOf(r,foil)+'</td></tr>':'')}).join('')+'</tbody></table></div>'+
     (rows.length>mkShown?'<div class="more"><button data-mkmore="1">Mostra altre 50 ('+(rows.length-mkShown).toLocaleString(LOC())+' rimaste)</button></div>':'');
   mkSparks(ctm?(foil?'y':'x'):avg?(foil?'t':'s'):(foil?'f':'e'));
 }
