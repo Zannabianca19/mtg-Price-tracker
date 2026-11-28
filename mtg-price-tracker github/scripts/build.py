@@ -412,7 +412,7 @@ def read_generic(token, guide):
 def restore(prev_game, out):
     """Ripubblica i dati di ieri di un gioco (quando l'aggiornamento di oggi non riesce)."""
     meta = json.loads(http(prev_game + "/meta.json"))
-    names = ["meta.json", "market.json", "movers.json", "catalog.json"] + [f"{d}/{sh}.json" for d in ("a", "h") for sh in SHARDS]
+    names = ["meta.json", "market.json", "movers.json", "catalog.json", "names.json"] + [f"{d}/{sh}.json" for d in ("a", "h") for sh in SHARDS]
     if meta.get("weeks"):
         names += [f"w/{sh}.json" for sh in SHARDS]
     for n in names:
@@ -502,6 +502,38 @@ def read_mtg(a, cur_only=False):
         linked += s7 is not None or t7 is not None
     print(f"Media vendite 7 giorni collegata a {linked} edizioni.")
     return cur, info
+
+
+NO_DECK = re.compile(r"^(WC\d\d|CED|CEI|30A|PTC|OLEP|PSSC)$")   # carte non da torneo (bordo oro, Collectors' Edition...)
+
+
+def write_names(out, today, cur, info):
+    """names.json: per ogni nome di carta la versione più economica, per il costo di un mazzo.
+    Riga: [nome, tendenza più bassa, id, set, foil, copia più economica su Cardmarket, EX+ CardTrader più economico, id CardTrader]."""
+    best = {}
+    for cid, c in cur.items():
+        inf = info.get(cid)
+        if not inf or NO_DECK.match(inf[1]) or re.search(r"Art Series|Oversized|World Championship|Token|Minigame", inf[2]):
+            continue
+        nm = inf[0]
+        b = best.setdefault(nm, [nm, None, None, None, 0, None, None, None])
+        for fo, k in ((0, "e"), (1, "f")):
+            v = c.get(k)
+            if v and (b[1] is None or v < b[1]):
+                b[1], b[2], b[3], b[4] = v, cid, inf[1], fo
+        for v in c.get("lo") or []:
+            if v and (b[5] is None or v < b[5]):
+                b[5] = v
+        ctn = c.get("ctn") or [None, None, None]
+        for k1, k2 in (("m", "x"), ("n", "y")):
+            v = c.get(k1) or c.get(k2)
+            if v and (b[6] is None or v < b[6]):
+                b[6], b[7] = v, ctn[2]
+    rows = sorted((r for r in best.values() if r[1] is not None or r[6] is not None), key=lambda r: r[0])
+    with open(os.path.join(out, "names.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": today, "fields": ["name", "trend", "id", "set", "foil", "cmLow", "exCT", "ctBlueprint"], "cards": rows},
+                  f, separators=(",", ":"), ensure_ascii=False)
+    print(f"names.json: {len(rows)} nomi di carte.")
 
 
 def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
@@ -670,6 +702,8 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
                        "fields": ["id", "name", "set", "cn", "image"], "cards": CATALOG},
                       f, separators=(",", ":"), ensure_ascii=False)
         print(f"catalog.json: {len(CATALOG)} carte.")
+    if GAME["id"] == "mtg":
+        write_names(a.out, today, cur, info)
     n_cards = sum(len(d) for d in shard_data.values())
     with open(os.path.join(a.out, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": today, "days": cdays, "archiveDays": len(days), "archiveDayList": days, "weeks": weeks, "cards": n_cards, "source": "Scryfall bulk default_cards (Cardmarket trend price, EUR)"}, f)

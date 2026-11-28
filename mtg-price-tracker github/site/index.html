@@ -184,7 +184,7 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
 <body>
 <header class="topbar"><div class="wrap tb">
   <a class="brand" href="#top" id="top"><svg viewBox="0 0 22 28" aria-hidden="true"><rect x="1" y="1" width="20" height="26" rx="2.5" fill="none" stroke="#f7d046" stroke-width="2"/><path d="M5 19l4.5-5 3.5 2.6L17 11" fill="none" stroke="#f7d046" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardmarket Price Tracker</a>
-  <nav><a href="#mk">All cards</a><a href="#mine">Your list</a><a href="#how-it-works">How it works</a></nav>
+  <nav><a href="#mk">All cards</a><a href="#deck" id="navDeck">Deck cost</a><a href="#mine">Your list</a><a href="#how-it-works">How it works</a></nav>
   <button class="inst" id="bInst" hidden>Install the app</button>
   <label class="lang" id="gameBox" hidden>Game <select id="selGame"></select></label>
   <label class="lang">Language <select id="selLang"></select></label>
@@ -219,6 +219,13 @@ tr.det td{background:var(--soft);text-align:left;white-space:normal;padding:12px
     </div>
     <div id="mkList"></div>
   </section>
+<section id="deck" class="block">
+  <div class="head"><h2>How much a deck costs</h2></div>
+  <p class="lead">Paste a list: for every card the site finds its cheapest printing, normal or foil, and tells you where it costs less to buy it, on Cardmarket or on CardTrader. Gold-bordered, oversized and other non-tournament cards are left out.</p>
+  <textarea id="dkList" placeholder="1 Sol Ring&#10;4 Lightning Bolt&#10;1 Delver of Secrets"></textarea>
+  <div class="row" style="margin-top:8px"><button class="main" id="bDeck">Calculate</button><span class="note">One card per line, with or without quantity. Basic lands are not counted.</span></div>
+  <div id="dkOut"></div>
+</section>
 <section id="mine" class="block">
   <div class="head"><h2>Your list <span class="msg" id="count"></span></h2></div>
   <dl class="sum">
@@ -358,6 +365,26 @@ RECS.push(...[["Quanto vale oggi ogni carta One Piece su Cardmarket", "What ever
 RECS.push(...[["Nome o codice della carta, es. Roronoa Zoro o OP01-001", "Card name or code, e.g. Roronoa Zoro or OP01-001", "Nom ou code de la carte, ex. Roronoa Zoro ou OP01-001", "Nombre o código de la carta, p. ej. Roronoa Zoro u OP01-001", "Kartenname oder Code, z. B. Roronoa Zoro oder OP01-001"], ["Versione", "Version", "Version", "Versión", "Version"], ["Stampa", "Printing", "Impression", "Impresión", "Druck"], ["La versione normale", "The normal version", "La version normale", "La versión normal", "Die normale Version"], ["La versione più cara (es. Alternate Art)", "The most expensive version (e.g. Alternate Art)", "La version la plus chère (ex. Alternate Art)", "La versión más cara (p. ej. Alternate Art)", "Die teuerste Version (z. B. Alternate Art)"], ["Nome del gruppo, es. mazzo Zoro (facoltativo)", "Group name, e.g. Zoro deck (optional)", "Nom du groupe, ex. deck Zoro (facultatif)", "Nombre del grupo, p. ej. mazo Zoro (opcional)", "Gruppenname, z. B. Zoro-Deck (optional)"], ["Una carta per riga: il codice (OP01-001), il nome o tutti e due, con o senza quantità (4x o 4). Le righe che iniziano con # aprono un nuovo mazzo, come per Magic.", "One card per line: the code (OP01-001), the name, or both, with or without quantity (4x or 4). Lines starting with # start a new deck, as for Magic.", "Une carte par ligne : le code (OP01-001), le nom ou les deux, avec ou sans quantité (4x ou 4). Les lignes qui commencent par # ouvrent un nouveau deck, comme pour Magic.", "Una carta por línea: el código (OP01-001), el nombre o ambos, con o sin cantidad (4x o 4). Las líneas que empiezan por # abren un mazo nuevo, como en Magic.", "Eine Karte pro Zeile: der Code (OP01-001), der Name oder beides, mit oder ohne Anzahl (4x oder 4). Zeilen mit # beginnen ein neues Deck, wie bei Magic."], ["Elenco delle carte non disponibile.", "Card list not available.", "Liste des cartes indisponible.", "Lista de cartas no disponible.", "Kartenliste nicht verfügbar."], ["Nessuna carta trovata.", "No card found.", "Aucune carte trouvée.", "No se ha encontrado ninguna carta.", "Keine Karte gefunden."], [" è già nella lista.", " is already in the list.", " est déjà dans la liste.", " ya está en la lista.", " ist schon in der Liste."], [" aggiunta.", " added.", " ajoutée.", " añadida.", " hinzugefügt."], ["Non ho trovato carte nel testo.", "I found no cards in the text.", "Je n'ai trouvé aucune carte dans le texte.", "No he encontrado cartas en el texto.", "Ich habe im Text keine Karten gefunden."]]);
 RECS.push(...[["Occasioni di oggi: copie EX+ appena messe in vendita su CardTrader sotto il solito prezzo", "Today's finds: EX+ copies just listed on CardTrader below the usual price", "Trouvailles du jour : exemplaires EX+ tout juste mis en vente sur CardTrader sous le prix habituel", "Hallazgos de hoy: copias EX+ recién puestas a la venta en CardTrader por debajo del precio habitual", "Fundstücke des Tages: EX+-Exemplare, die gerade auf CardTrader unter dem üblichen Preis eingestellt wurden"],
   ["di solito ", "usually ", "d'habitude ", "normalmente ", "sonst "],
+  ["Costo mazzo", "Deck cost", "Coût du deck", "Coste del mazo", "Deckkosten"],
+  ["Quanto costa un mazzo", "How much a deck costs", "Combien coûte un deck", "Cuánto cuesta un mazo", "Was ein Deck kostet"],
+  ["Incolla una lista: per ogni carta il sito trova la versione più economica, normale o foil, e ti dice dove conviene comprarla, su Cardmarket o su CardTrader. Le carte col bordo oro, quelle giganti e le altre non da torneo sono escluse.", "Paste a list: for every card the site finds its cheapest printing, normal or foil, and tells you where it costs less to buy it, on Cardmarket or on CardTrader. Gold-bordered, oversized and other non-tournament cards are left out.", "Collez une liste : pour chaque carte, le site trouve l'édition la moins chère, normale ou foil, et vous dit où l'acheter le moins cher, sur Cardmarket ou sur CardTrader. Les cartes à bord doré, surdimensionnées et autres cartes non autorisées en tournoi sont exclues.", "Pega una lista: para cada carta el sitio encuentra la edición más barata, normal o foil, y te dice dónde comprarla más barata, en Cardmarket o en CardTrader. Se excluyen las cartas de borde dorado, las gigantes y otras no válidas para torneo.", "Füge eine Liste ein: Für jede Karte findet die Seite die günstigste Ausgabe, normal oder Foil, und sagt dir, wo sie günstiger ist, auf Cardmarket oder auf CardTrader. Karten mit Goldrand, Übergrößen und andere nicht turnierlegale Karten werden ausgelassen."],
+  ["Calcola", "Calculate", "Calculer", "Calcular", "Berechnen"],
+  ["Una carta per riga, con o senza quantità. Le terre base non si contano.", "One card per line, with or without quantity. Basic lands are not counted.", "Une carte par ligne, avec ou sans quantité. Les terrains de base ne sont pas comptés.", "Una carta por línea, con o sin cantidad. Las tierras básicas no se cuentan.", "Eine Karte pro Zeile, mit oder ohne Anzahl. Standardländer werden nicht gezählt."],
+  ["Non ho trovato nomi di carte nel testo.", "I couldn't find any card names in the text.", "Je n'ai trouvé aucun nom de carte dans le texte.", "No encontré nombres de cartas en el texto.", "Ich habe im Text keine Kartennamen gefunden."],
+  ["Carico i prezzi…", "Loading prices…", "Chargement des prix…", "Cargando precios…", "Preise werden geladen…"],
+  ["I prezzi per il costo dei mazzi arrivano con il prossimo aggiornamento.", "Prices for deck costs arrive with the next update.", "Les prix pour le coût des decks arrivent avec la prochaine mise à jour.", "Los precios para el coste de los mazos llegan con la próxima actualización.", "Die Preise für Deckkosten kommen mit dem nächsten Update."],
+  ["Cardmarket, tendenza delle versioni più economiche", "Cardmarket, trend of the cheapest printings", "Cardmarket, tendance des éditions les moins chères", "Cardmarket, tendencia de las ediciones más baratas", "Cardmarket, Trend der günstigsten Ausgaben"],
+  ["Cardmarket, copie più economiche in vendita", "Cardmarket, cheapest copies for sale", "Cardmarket, exemplaires les moins chers en vente", "Cardmarket, copias más baratas en venta", "Cardmarket, günstigste angebotene Exemplare"],
+  ["Comprando ogni carta dove costa meno", "Buying each card where it costs less", "En achetant chaque carte là où elle coûte le moins", "Comprando cada carta donde cuesta menos", "Jede Karte dort gekauft, wo sie am günstigsten ist"],
+  ["Carte", "Cards", "Cartes", "Cartas", "Karten"],
+  ["Non trovate: ", "Not found: ", "Introuvables : ", "No encontradas: ", "Nicht gefunden: "],
+  ["Carta", "Card", "Carte", "Carta", "Karte"],
+  ["Versione più economica", "Cheapest printing", "Édition la moins chère", "Edición más barata", "Günstigste Ausgabe"],
+  ["Cardmarket da", "Cardmarket from", "Cardmarket dès", "Cardmarket desde", "Cardmarket ab"],
+  ["Dove conviene", "Best place", "Meilleur endroit", "Dónde conviene", "Wo günstiger"],
+  ["Totale", "Total", "Total", "Total", "Gesamt"],
+  ["tendenza ", "trend ", "tendance ", "tendencia ", "Trend "],
+  ["«Cardmarket da» è la copia più economica in qualsiasi condizione; «CardTrader EX+» è la copia più economica in condizione Mint, Near Mint o Slightly Played. Spese di spedizione escluse.", "«Cardmarket from» is the cheapest copy in any condition; «CardTrader EX+» is the cheapest copy in Mint, Near Mint or Slightly Played condition. Shipping not included.", "«Cardmarket dès» est l'exemplaire le moins cher dans n'importe quel état ; «CardTrader EX+» est l'exemplaire le moins cher en état Mint, Near Mint ou Slightly Played. Frais de port non compris.", "«Cardmarket desde» es la copia más barata en cualquier estado; «CardTrader EX+» es la copia más barata en estado Mint, Near Mint o Slightly Played. Envío no incluido.", "«Cardmarket ab» ist das günstigste Exemplar in beliebigem Zustand; «CardTrader EX+» ist das günstigste Exemplar in Mint, Near Mint oder Slightly Played. Versand nicht inbegriffen."],
   ["tendenza forse gonfiata", "trend possibly inflated", "tendance peut-être gonflée", "tendencia quizá inflada", "Trend womöglich aufgebläht"],
   ["Le occasioni di oggi compaiono dal prossimo aggiornamento dei prezzi.", "Today's finds appear from the next price update.", "Les trouvailles du jour apparaissent à la prochaine mise à jour des prix.", "Los hallazgos de hoy aparecen a partir de la próxima actualización de precios.", "Die Fundstücke des Tages erscheinen ab der nächsten Preisaktualisierung."]]);
 RECS.push(...[["Affari: EX+ su CardTrader sotto la copia più economica di Cardmarket", "Deals: EX+ on CardTrader below the cheapest copy on Cardmarket", "Bonnes affaires : EX+ sur CardTrader sous l'exemplaire le moins cher de Cardmarket", "Gangas: EX+ en CardTrader por debajo de la copia más barata de Cardmarket", "Schnäppchen: EX+ auf CardTrader unter dem günstigsten Exemplar auf Cardmarket"]]);
@@ -545,6 +572,7 @@ function gameUI(){
   const mtg=GAME==='mtg';
   for(const id of['dAdd','dImp'])$('#'+id).hidden=!mtg;
   for(const id of['dAddG','dImpG'])$('#'+id).hidden=mtg;
+  $('#deck').hidden=!mtg;$('#navDeck').hidden=!mtg;
   $('#opNote').hidden=true;$('#gRes').innerHTML='';$('#gQ').value='';
   $('#h1t').textContent=mtg?'Quanto vale oggi ogni carta Magic su Cardmarket':'Quanto vale oggi ogni carta '+(GAMES.find(g=>g.id===GAME)||{}).name+' su Cardmarket';
 }
@@ -677,6 +705,34 @@ function inflated(r,foil){
   return!!(tr>=lo*2.5&&((a7&&tr>=a7*1.4)||(m1&&tr>=m1*1.4)));
 }
 const INFL='<small class="lo warn" title="La tendenza di Cardmarket è molto più alta delle copie in vendita: probabilmente l\'ha alzata una vendita fuori scala. Controlla le offerte prima di fidarti.">tendenza forse gonfiata</small>';
+// costo di un mazzo: per ogni nome la versione più economica (names.json, solo Magic)
+let NAMES=null;
+async function loadNames(){if(NAMES)return NAMES;const q=await fetch(DATA('mtg')+'names.json',{cache:'no-cache'});if(!q.ok)throw new Error('names');const j=await q.json();NAMES=new Map();
+  for(const r of j.cards){const k=r[0].toLowerCase();NAMES.set(k,r);const f=k.split(' // ')[0];if(f!==k&&!NAMES.has(f))NAMES.set(f,r)}NAMES.updated=j.updated;return NAMES}
+const BASICS=new Set(['plains','island','swamp','mountain','forest','wastes','snow-covered plains','snow-covered island','snow-covered swamp','snow-covered mountain','snow-covered forest']);
+async function deckCost(){
+  const out=$('#dkOut'),want=new Map();
+  for(let l of $('#dkList').value.split(/\r?\n/)){l=l.replace(/^\s*\/\/.*$/,'').replace(/\*F\*/i,'').trim();
+    if(!l||/^#/.test(l)||/^(sideboard|commander|deck|mainboard|companion)\b:?$/i.test(l))continue;
+    const m=l.match(/^(\d+)\s*x?\s+(.+)$/i);let q=1,n=l;if(m){q=+m[1];n=m[2]}
+    n=n.replace(/\s+\([A-Za-z0-9]{2,6}\)(\s+\S+)?$/,'').replace(/\s+#?\d+[a-z]?$/,'').trim();const k=n.toLowerCase();
+    if(!n||BASICS.has(k))continue;const o=want.get(k)||{name:n,qty:0};o.qty+=q;want.set(k,o)}
+  if(!want.size){out.innerHTML='<p class="note">Non ho trovato nomi di carte nel testo.</p>';return}
+  out.innerHTML='<p class="note">Carico i prezzi…</p>';
+  let N;try{N=await loadNames()}catch{out.innerHTML='<p class="note">I prezzi per il costo dei mazzi arrivano con il prossimo aggiornamento.</p>';return}
+  const rows=[],miss=[];let tCm=0,tLo=0,tBest=0;
+  for(const[k,w]of want){const r=N.get(k);if(!r){miss.push(w.name);continue}
+    const cm=r[1],lo=r[5]!=null&&cm!=null?Math.min(r[5],cm):(r[5]??cm),ct=r[6],best=ct!=null&&(lo==null||ct<lo)?'ct':'cm',bp=best==='ct'?ct:lo;
+    tCm+=(cm||0)*w.qty;tLo+=(lo||0)*w.qty;tBest+=(bp||0)*w.qty;rows.push({w,r,cm,lo,ct,best,bp})}
+  rows.sort((a,b)=>(b.bp||0)*b.w.qty-(a.bp||0)*a.w.qty);
+  const cmUrl=r=>{const m=MK&&GAME==='mtg'&&MK.byId.get(r[2]);return m?mkUrl(m):'https://www.cardmarket.com/en/Magic/Products/Search?searchString='+encodeURIComponent(r[0])};
+  out.innerHTML='<dl class="sum"><div><dt>Cardmarket, tendenza delle versioni più economiche</dt><dd>'+esc(eur(tCm/100))+'</dd></div><div><dt>Cardmarket, copie più economiche in vendita</dt><dd>'+esc(eur(tLo/100))+'</dd></div><div><dt>Comprando ogni carta dove costa meno</dt><dd>'+esc(eur(tBest/100))+'</dd></div><div><dt>Carte</dt><dd>'+rows.reduce((a,x)=>a+x.w.qty,0)+'</dd></div></dl>'+
+    (miss.length?'<p class="note"><span>Non trovate: </span>'+miss.map(esc).join(', ')+'</p>':'')+
+    '<div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Versione più economica</th><th>Cardmarket da</th><th>CardTrader EX+</th><th>Dove conviene</th><th>Totale</th></tr></thead><tbody>'+
+    rows.map(x=>'<tr><td class="name">'+x.w.qty+' × '+esc(x.r[0])+'</td><td><a href="'+esc(cmUrl(x.r))+'" target="_blank" rel="noopener"><span class="set">'+esc(x.r[3]||'')+'</span></a>'+(x.r[4]?' <span class="foil">foil</span>':'')+'<small class="lo"><span>tendenza </span>'+esc(eur(x.cm==null?null:x.cm/100))+'</small></td><td>'+esc(eur(x.lo==null?null:x.lo/100))+'</td><td>'+(x.ct!=null?(x.r[7]?'<a href="https://www.cardtrader.com/cards/'+(+x.r[7])+'" target="_blank" rel="noopener">'+esc(eur(x.ct/100))+'</a>':esc(eur(x.ct/100))):'—')+'</td><td>'+(x.bp==null?'—':x.best==='ct'?'CardTrader':'Cardmarket')+'</td><td>'+esc(eur(x.bp==null?null:x.bp*x.w.qty/100))+'</td></tr>').join('')+'</tbody></table></div>'+
+    '<p class="note">«Cardmarket da» è la copia più economica in qualsiasi condizione; «CardTrader EX+» è la copia più economica in condizione Mint, Near Mint o Slightly Played. Spese di spedizione escluse.</p>';
+}
+$('#bDeck').onclick=deckCost;
 function mkRows(){
   const foil=$('#mkF').value==='f',P=$('#mkP').value,avg=P==='a',o=(P==='x'?22:avg?14:6)+(foil?4:0),w=WI[$('#mkW').value]||1,s=$('#mkS').value;
   const fi=MK.formats.indexOf($('#mkL').value),min=(parseFloat($('#mkMin').value)||0)*100,q=$('#mkQ').value.trim().toLowerCase();
