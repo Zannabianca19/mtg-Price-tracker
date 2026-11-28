@@ -344,7 +344,7 @@ def read_cardtrader(token, cards):
                             and (p.get("price") or {}).get("cents"))
                 if not ok:
                     continue
-                v = round(sum(ok[:3]) / len(ok[:3]))
+                v = ex_level(ok)
                 if trend and trend >= 100 and not (0.25 <= v / trend <= 15):   # quasi certamente un'altra versione
                     skipped += 1
                     continue
@@ -357,6 +357,14 @@ def read_cardtrader(token, cards):
 
 CT_IMG = "https://cardtrader.com/uploads/blueprints/image/"
 CATALOG, CATALOG_SETS = [], {}   # tutte le carte dei giochi senza Scryfall (per cercare e importare dal sito)
+
+
+def ex_level(ok):
+    """Prezzo EX+ di riferimento da una lista ordinata di prezzi: media delle 3 offerte più economiche, ma solo
+    quelle entro il doppio della più economica. Così una o due offerte fuori mercato (spesso carte gradate messe
+    come normali) non trascinano il prezzo: Hurricane Alpha, offerte da 250, ~2000 e ~3300 € -> 250 €, non 1850 €."""
+    top = [v for v in ok[:3] if v <= ok[0] * 2]
+    return round(sum(top) / len(top))
 
 
 def ct_ex(lst, langkey, lang, foil=None):
@@ -372,7 +380,7 @@ def ct_ex(lst, langkey, lang, foil=None):
                 and (p.get("price") or {}).get("cents"))
     if not ok:
         return None, 0, None
-    return round(sum(ok[:3]) / len(ok[:3])), len(ok), ok[0]
+    return ex_level(ok), len(ok), ok[0]
 
 
 def read_generic(token, guide):
@@ -513,14 +521,21 @@ def read_mtg(a, cur_only=False):
         cur[cid]["x"], cur[cid]["y"], cur[cid]["m"], cur[cid]["n"] = r.get("x"), r.get("y"), r.get("xm"), r.get("ym")
         cur[cid]["ctn"] = [r.get("xn"), r.get("yn"), r["ct"]]
         cur[cid]["o"], cur[cid]["p"] = r.get("xn"), r.get("yn")
-    linked = 0
+    linked = dropped = 0
     for cid, c in cur.items():
         s7, t7, lo, lf, d1, g1 = pg.get(c.pop("cm", None), (None,) * 6)
         c["s"], c["t"], c["d"], c["g"] = s7, t7, d1, g1
         if lo is not None or lf is not None:
             c["lo"] = [lo, lf]   # prezzo più basso in vendita oggi (normale, foil): solo il valore del giorno
+        # EX+ di CardTrader più di 5 volte sopra sia la tendenza sia la copia più economica di Cardmarket:
+        # quasi certamente offerte fuori mercato o un'altra versione, meglio niente
+        for k, km, ref in (("x", "m", (c.get("e"), lo)), ("y", "n", (c.get("f"), lf))):
+            r = max([v for v in ref if v] or [0])
+            if c.get(k) and r >= 100 and c[k] > 5 * r:
+                c[k] = c[km] = None
+                dropped += 1
         linked += s7 is not None or t7 is not None
-    print(f"Media vendite 7 giorni collegata a {linked} edizioni.")
+    print(f"Media vendite 7 giorni collegata a {linked} edizioni; {dropped} prezzi EX+ scartati perché fuori mercato.")
     return cur, info
 
 
