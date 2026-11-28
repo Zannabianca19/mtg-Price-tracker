@@ -39,10 +39,12 @@ GAMES = {
 GAME = dict(GAMES["mtg"], id="mtg")   # il gioco in lavorazione (lo sceglie --game)
 # Serie salvate per ogni edizione: e/f = prezzo di tendenza normale/foil (Scryfall),
 # s/t = media delle vendite a 7 giorni normale/foil (listino pubblico di Cardmarket).
-SERIES = ("e", "f", "s", "t", "x", "y")
+SERIES = ("e", "f", "s", "t", "x", "y", "d", "g", "m", "n")
 # x/y = prezzo "EX o meglio" su CardTrader, normale/foil: media delle 3 offerte più economiche
 # in inglese, condizione Mint, Near Mint o Slightly Played (l'Excellent di Cardmarket).
-SHORT = ("s", "t", "x", "y")   # serie tenute solo CLIENT_DAYS giorni (bastano per 1/7/30 giorni)
+# d/g = media delle vendite del giorno su Cardmarket (normale/foil): da qui la mediana su 7 giorni,
+#       che ignora le giornate con una vendita fuori scala. m/n = l'offerta EX+ più economica su CardTrader (x/y).
+SHORT = ("s", "t", "x", "y", "d", "g", "m", "n")   # serie tenute solo CLIENT_DAYS giorni (bastano per 1/7/30 giorni)
 WEEKLY = ("e", "f")             # storico settimanale permanente: tendenza normale e foil
 CT_API = "https://api.cardtrader.com/api/v2"
 CT_MIN = 500             # CardTrader solo per le espansioni con carte da almeno 5 € (tendenza)
@@ -155,6 +157,22 @@ def enc(vals):
     return ",".join("" if v is None else str(v) for v in vals)
 
 
+def pos(p):
+    """Come cents, ma 0 (giorno senza vendite) diventa None."""
+    v = cents(p)
+    return v if v else None
+
+
+def median_last(vals, k=7, lookback=14, need=3):
+    """Mediana degli ultimi k valori presenti negli ultimi `lookback` giorni (None se ce ne sono meno di `need`)."""
+    v = [x for x in vals[-lookback:] if x is not None][-k:]
+    if len(v) < need:
+        return None
+    v = sorted(v)
+    n = len(v)
+    return v[n // 2] if n % 2 else round((v[n // 2 - 1] + v[n // 2]) / 2)
+
+
 def cents(p):
     if p is None:
         return None
@@ -213,7 +231,8 @@ def read_price_guide():
     """Media vendite 7 giorni per idProduct, in centesimi. Se il listino non si scarica, si va avanti senza."""
     try:
         pg = json.loads(http(PRICE_GUIDE.format(cm=GAME["cm"])))
-        out = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil")))
+        out = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil")),
+                                  pos(it.get("avg1")), pos(it.get("avg1-foil")))
                for it in pg.get("priceGuides", []) if it.get("idProduct")}
         print(f"Listino Cardmarket del {pg.get('createdAt')}: {len(out)} prodotti.")
         return out
@@ -310,7 +329,7 @@ def read_cardtrader(token, cards):
                 if trend and trend >= 100 and not (0.25 <= v / trend <= 15):   # quasi certamente un'altra versione
                     skipped += 1
                     continue
-                rec[key], rec[key + "n"] = v, len(ok)
+                rec[key], rec[key + "n"], rec[key + "m"] = v, len(ok), ok[0]
             if "x" in rec or "y" in rec:
                 out[sid] = rec
     print(f"CardTrader: {done} espansioni in {time.time() - t0:.0f} s, prezzo EX+ per {len(out)} edizioni ({via_cm} collegate col codice Cardmarket), {skipped} scartate.")
@@ -333,8 +352,8 @@ def ct_ex(lst, langkey, lang, foil=None):
                 and (p.get("price") or {}).get("currency") == "EUR"
                 and (p.get("price") or {}).get("cents"))
     if not ok:
-        return None, 0
-    return round(sum(ok[:3]) / len(ok[:3])), len(ok)
+        return None, 0, None
+    return round(sum(ok[:3]) / len(ok[:3])), len(ok), ok[0]
 
 
 def read_generic(token, guide):
@@ -371,13 +390,13 @@ def read_generic(token, guide):
             CATALOG_SETS[(e.get("code") or "").upper()] = e.get("name", "")
             lst = prods.get(str(b["id"])) or []
             cmid = next((c for c in (b.get("card_market_ids") or []) if c in guide), None)
-            tr, a7, lo = guide.get(cmid, (None, None, None))
-            x, xn = ct_ex(lst, langkey, l1)
-            y, yn = ct_ex(lst, langkey, l2)
+            tr, a7, lo, a1 = guide.get(cmid, (None,) * 4)
+            x, xn, xm = ct_ex(lst, langkey, l1)
+            y, yn, ym = ct_ex(lst, langkey, l2)
             if tr is None and x is None and y is None:
                 continue
             cid = f"{GAME['id']}-{b['id']}"
-            cur[cid] = {"e": tr, "f": tr, "s": a7, "t": a7, "x": x, "y": y, "ctn": [xn or None, yn or None, b["id"]]}
+            cur[cid] = {"e": tr, "f": tr, "s": a7, "t": a7, "x": x, "y": y, "d": a1, "g": a1, "m": xm, "n": ym, "ctn": [xn or None, yn or None, b["id"]]}
             if lo is not None:
                 cur[cid]["lo"] = [lo, lo]
             info[cid] = [b.get("name", "") + (f" ({ver})" if ver else ""), (e.get("code") or "").upper(), e.get("name", ""),
@@ -450,7 +469,7 @@ def main():
                 items = json.load(f)["priceGuides"]
         else:
             items = json.loads(http(PRICE_GUIDE.format(cm=GAME["cm"])))["priceGuides"]
-        guide = {it["idProduct"]: (cents(it.get("trend")), cents(it.get("avg7")), cents(it.get("low"))) for it in items}
+        guide = {it["idProduct"]: (cents(it.get("trend")), cents(it.get("avg7")), cents(it.get("low")), pos(it.get("avg1"))) for it in items}
         print(f"Listino Cardmarket {GAME['name']}: {len(guide)} prodotti.")
         cur, info = read_generic(os.environ.get("CARDTRADER_TOKEN", "").strip(), guide)
         if len(cur) < 100:
@@ -467,16 +486,17 @@ def read_mtg(a, cur_only=False):
     pg = {} if a.bulk else read_price_guide()
     if a.guide:
         with open(a.guide, encoding="utf-8") as f:
-            pg = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil"))) for it in json.load(f)["priceGuides"]}
+            pg = {it["idProduct"]: (cents(it.get("avg7")), cents(it.get("avg7-foil")), cents(it.get("low")), cents(it.get("low-foil")),
+                                  pos(it.get("avg1")), pos(it.get("avg1-foil"))) for it in json.load(f)["priceGuides"]}
     ctcards = {cid: (info[cid][1], c.get("cm"), c.get("e"), c.get("f")) for cid, c in cur.items() if cid in info}
     ct = read_cardtrader(os.environ.get("CARDTRADER_TOKEN", "").strip(), ctcards)
     for cid, r in ct.items():
-        cur[cid]["x"], cur[cid]["y"] = r.get("x"), r.get("y")
+        cur[cid]["x"], cur[cid]["y"], cur[cid]["m"], cur[cid]["n"] = r.get("x"), r.get("y"), r.get("xm"), r.get("ym")
         cur[cid]["ctn"] = [r.get("xn"), r.get("yn"), r["ct"]]
     linked = 0
     for cid, c in cur.items():
-        s7, t7, lo, lf = pg.get(c.pop("cm", None), (None, None, None, None))
-        c["s"], c["t"] = s7, t7
+        s7, t7, lo, lf, d1, g1 = pg.get(c.pop("cm", None), (None,) * 6)
+        c["s"], c["t"], c["d"], c["g"] = s7, t7, d1, g1
         if lo is not None or lf is not None:
             c["lo"] = [lo, lf]   # prezzo più basso in vendita oggi (normale, foil): solo il valore del giorno
         linked += s7 is not None or t7 is not None
@@ -570,6 +590,12 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
             row.extend(now.get("ctn") or [None, None, None])
             row.append(info[cid][6] if len(info[cid]) > 6 else None)   # immagine (giochi senza Scryfall)
             row.extend(now.get("lo") or [None, None])   # copia più economica su Cardmarket oggi (normale, foil)
+            # mediana a 7 giorni della media giornaliera di Cardmarket (normale, foil)
+            row.extend(median_last(ser[k]) for k in ("d", "g"))
+            # offerta EX+ più economica oggi su CardTrader, e il livello solito dei giorni prima
+            # (mediana della media delle 3 più economiche): se oggi è molto più bassa, qualcuno l'ha appena messa in vendita
+            row.extend(ser[k][-1] for k in ("m", "n"))
+            row.extend(median_last(ser[k][:-1]) for k in ("x", "y"))
             market.append(row)
         if cid in info:
             for fin, arr in (("n", ne), ("f", nf)):
@@ -633,7 +659,8 @@ def build_archive(a, today, old_days, hist, old_weeks, wk, cur, info):
                               "foilSales7", "foilSales7Base1", "foilSales7Base7", "foilSales7Base30",
                               "exCT", "exCTBase1", "exCTBase7", "exCTBase30",
                               "foilExCT", "foilExCTBase1", "foilExCTBase7", "foilExCTBase30",
-                              "exCTOffers", "foilExCTOffers", "ctBlueprint", "image", "cmLow", "foilCmLow"], "imgPrefix": CT_IMG, "cards": market},
+                              "exCTOffers", "foilExCTOffers", "ctBlueprint", "image", "cmLow", "foilCmLow",
+                              "sales1Med7", "foilSales1Med7", "exCTMin", "foilExCTMin", "exCTUsual", "foilExCTUsual"], "imgPrefix": CT_IMG, "cards": market},
                   f, separators=(",", ":"), ensure_ascii=False)
     print(f"market.json: {len(market)} carte da almeno {MARKET_MIN / 100:.0f} €")
     if CATALOG:
