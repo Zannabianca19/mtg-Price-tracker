@@ -122,6 +122,7 @@ td.name small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
 .lo{display:block;font-size:12px;color:var(--mute);margin-top:2px}
 .lo.deal{color:var(--up);font-weight:600}
 .lo.warn{color:var(--down);cursor:help}
+td.weak{opacity:.55;cursor:help}
 details.val{margin:0 0 10px}
 .prh{font-size:15px;margin:14px 0 6px}table.prt tr.cur td{background:color-mix(in srgb,var(--blue) 10%,transparent)}details.val summary{cursor:pointer;font-weight:600;padding:6px 0}
 .lo a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--mute)}.lo a:hover{color:var(--blue);border-color:var(--blue)}
@@ -372,6 +373,8 @@ RECS.push(...[["Occasioni di oggi: copie EX+ appena messe in vendita su CardTrad
   ["EX+ su CardTrader", "EX+ on CardTrader", "EX+ sur CardTrader", "EX+ en CardTrader", "EX+ auf CardTrader"],
   ["Solo le versioni che valgono almeno 1 €. Ordinate dalla più economica, ", "Only printings worth at least €1. Sorted from the cheapest, ", "Seulement les éditions valant au moins 1 €. Triées de la moins chère, ", "Solo las ediciones que valen al menos 1 €. Ordenadas de la más barata, ", "Nur Drucke ab 1 €. Sortiert ab dem günstigsten, "],
   ["ristampa in arrivo: ", "reprint coming: ", "réimpression à venir : ", "reimpresión en camino: ", "Neudruck kommt: "],
+  ["Poche offerte su CardTrader: basta una vendita per far saltare il prezzo.", "Few offers on CardTrader: a single sale can make the price jump.", "Peu d'offres sur CardTrader : une seule vente peut faire bondir le prix.", "Pocas ofertas en CardTrader: basta una venta para que el precio salte.", "Wenige Angebote auf CardTrader: Ein einziger Verkauf kann den Preis springen lassen."],
+  ["Tendenza forse gonfiata da una vendita fuori scala.", "Trend possibly inflated by an out-of-line sale.", "Tendance peut-être gonflée par une vente hors norme.", "Tendencia quizá inflada por una venta fuera de lo normal.", "Trend womöglich durch einen Ausreißer-Verkauf aufgebläht."],
   ["Valore nel tempo", "Value over time", "Valeur dans le temps", "Valor en el tiempo", "Wert im Zeitverlauf"],
   ["In 7 giorni", "In 7 days", "En 7 jours", "En 7 días", "In 7 Tagen"],
   ["In 30 giorni", "In 30 days", "En 30 jours", "En 30 días", "In 30 Tagen"],
@@ -749,6 +752,9 @@ async function deckCost(){
     '<p class="note">«Dove conviene» confronta la tendenza di Cardmarket con la copia più economica su CardTrader in condizione Mint, Near Mint o Slightly Played. «Cardmarket da» è la copia più economica in qualsiasi condizione, anche rovinata. Spese di spedizione escluse.</p>';
 }
 $('#bDeck').onclick=deckCost;
+// variazione poco affidabile: prezzo EX+ con meno di 3 offerte su CardTrader (basta una vendita a farlo saltare),
+// oppure tendenza forse gonfiata da una vendita fuori scala
+const weak=(r,foil,P)=>P==='x'?(r[foil?31:30]||0)<3:P==='t'?inflated(r,foil):false;
 function mkRows(){
   const foil=$('#mkF').value==='f',P=$('#mkP').value,avg=P==='a',o=(P==='x'?22:avg?14:6)+(foil?4:0),w=WI[$('#mkW').value]||1,s=$('#mkS').value;
   const fi=MK.formats.indexOf($('#mkL').value),min=(parseFloat($('#mkMin').value)||0)*100,q=$('#mkQ').value.trim().toLowerCase();
@@ -770,8 +776,10 @@ function mkRows(){
       if(!(mn&&us&&us>=300&&mn<=us*0.85&&us-mn>=200))continue;
       if(cmp&&lo&&mn>=lo)continue;
       oc={mn,us,save:us-mn}}
-    out.push({r,last,d,p:b?d/b*100:null,deal,ex,lo,oc,save:oc?oc.save:deal!=null?lo-ex:null})}
-  const by={dl:x=>x.save,oc:x=>x.save,ea:x=>x.d==null?null:Math.abs(x.d),eu:x=>x.d,ed:x=>x.d==null?null:-x.d,pu:x=>x.p,pd:x=>x.p==null?null:-x.p,pr:x=>x.last}[s];
+    out.push({r,last,d,p:b?d/b*100:null,deal,ex,lo,oc,lc:weak(r,foil,P),save:oc?oc.save:deal!=null?lo-ex:null})}
+  const by0={dl:x=>x.save,oc:x=>x.save,ea:x=>x.d==null?null:Math.abs(x.d),eu:x=>x.d,ed:x=>x.d==null?null:-x.d,pu:x=>x.p,pd:x=>x.p==null?null:-x.p,pr:x=>x.last}[s];
+  // nelle classifiche di chi si muove, le variazioni poco affidabili vanno in fondo
+  const by=/^(ea|eu|ed|pu|pd)$/.test(s)?x=>x.lc?null:by0(x):by0;
   if(s==='nm')out.sort((a,b)=>a.r[1].localeCompare(b.r[1]));
   else out.sort((a,b)=>{const x=by(a),y=by(b);if(x==null&&y==null)return b.last-a.last;if(x==null)return 1;if(y==null)return-1;return y-x||b.last-a.last});
   return mkCur=out;
@@ -807,7 +815,7 @@ function renderMk(){
   const rows=mkRows();mkSaveUrl();
   if(!rows.length){$('#mkList').innerHTML='<div class="empty">'+($('#mkS').value==='oc'&&!MK.cards.some(r=>r[40]||r[41])?'Le occasioni di oggi compaiono dal prossimo aggiornamento dei prezzi.':'Nessuna carta per questi filtri.')+'</div>';return}
   const have=new Set(D.cards.map(c=>c.id+(c.foil?'|f':'')));
-  const ch=(r,k)=>{const l=r[o],b=r[o+k];if(l==null||!b)return'<td class="flat">—</td>';const d=(l-b)/100,p=(l-b)/b*100;return'<td class="'+cls(p)+'">'+vc(p,d)+'</td>'};
+  const ch=(r,k)=>{const l=r[o],b=r[o+k];if(l==null||!b)return'<td class="flat">—</td>';const d=(l-b)/100,p=(l-b)/b*100;return weak(r,foil,P)?'<td class="flat weak" title="'+esc(tr(P==='x'?'Poche offerte su CardTrader: basta una vendita per far saltare il prezzo.':'Tendenza forse gonfiata da una vendita fuori scala.'))+'">'+vc(p,d)+'</td>':'<td class="'+cls(p)+'">'+vc(p,d)+'</td>'};
   $('#mkList').innerHTML='<p class="count"><span>'+rows.length.toLocaleString(LOC())+' carte'+(avg?'<span>. Prezzi: media delle vendite degli ultimi 7 giorni, dal listino pubblico di Cardmarket.</span>':ctm?'<span><span>. Prezzi: media delle 3 offerte più economiche in inglese, condizione Mint, Near Mint o Slightly Played, su </span><a href="https://www.cardtrader.com/" target="_blank" rel="noopener">CardTrader</a>.</span>':'')+'</span> <button class="x share" data-share="1">Copia il link di questa ricerca</button></p><div class="sheet scroll"><table class="stack"><thead><tr><th>Carta</th><th>Prezzo</th><th>1 giorno</th><th>7 giorni</th><th>30 giorni</th><th>Andamento</th><th></th></tr></thead><tbody>'+
     rows.slice(0,mkShown).map((x,i)=>{const r=x.r;
       return'<tr><td class="name"><a href="'+esc(mkUrl(r))+'" target="_blank" rel="noopener" data-pv="'+esc(r[0])+'">'+esc(r[1])+'</a>'+(foil?(GAME==='mtg'?' <span class="foil">foil</span>':' <span class="sample">JP</span>'):'')+'<small><span class="set">'+esc(r[2])+'</span>'+esc(MK.sets[r[2]]||'')+' #'+esc(r[3])+exLink(mkUrl(r))+((ctm||x.oc)&&r[32]?ctLink(r[32],r[foil?31:30]):'')+'</small></td><td>'+esc(eur(x.last/100))+(P==='t'&&inflated(r,foil)?INFL:'')+reprTag(r[1])+($('#mkS').value==='dl'&&x.deal!=null?'<small class="lo deal">CardTrader EX+ '+esc(eur(x.ex/100))+'</small><small class="lo"><span>Cardmarket da </span>'+esc(eur(x.r[$('#mkF').value==='f'?35:34]/100))+' ('+esc(eurTxt(-x.save/100))+')</small>':'')+(x.oc?'<small class="lo deal">CardTrader EX+ '+esc(eur(x.oc.mn/100))+'</small><small class="lo"><span>di solito </span>'+esc(eur(x.oc.us/100))+' ('+esc(eurTxt(-x.oc.save/100))+')</small>'+(x.lo?'<small class="lo"><span>Cardmarket da </span>'+esc(eur(x.lo/100))+'</small>':''):'')+'</td>'+ch(r,1)+ch(r,2)+ch(r,3)+
